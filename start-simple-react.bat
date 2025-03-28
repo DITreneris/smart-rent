@@ -1,0 +1,6 @@
+@echo off
+cd frontend
+echo Setting up simplified React app...
+copy src\index-simple.js src\index.js /Y
+echo Starting React frontend...
+npm start 

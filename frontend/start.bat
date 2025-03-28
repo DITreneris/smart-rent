@@ -1,0 +1,3 @@
+@echo off
+echo Starting the Smart Rent Frontend...
+call npx react-scripts start 

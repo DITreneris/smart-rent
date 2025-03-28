@@ -1,0 +1,58 @@
+# Version control
+.git
+.gitignore
+.github
+
+# Node.js
+node_modules
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Build outputs
+dist
+build
+*.egg-info/
+
+# Docker
+.dockerignore
+Dockerfile
+docker-compose*.yml
+
+# Development
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+
+# Project specific
+ssl/
+*.md
+!README.md
+*.log
+logs/
+data/
+temp/
+tmp/
+.env.*
+!.env.docker
+!.env.example
+!.env.prod.example 

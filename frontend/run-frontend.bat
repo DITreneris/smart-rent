@@ -1,0 +1,3 @@
+@echo off
+echo Starting Smart Rent Frontend...
+cmd /c npm start 

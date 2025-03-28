@@ -1,0 +1,48 @@
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap');
+
+/* Component Classes */
+.btn-primary {
+  @apply bg-primary text-white font-semibold py-2 px-6 rounded-xl hover:bg-blue-700 transition duration-200;
+}
+
+.btn-secondary {
+  @apply border border-primary text-primary py-2 px-6 rounded-xl hover:bg-primary hover:text-white transition duration-200;
+}
+
+.card {
+  @apply bg-card-bg shadow-card p-6 rounded-lg text-neutral-900 hover:shadow-hover transition duration-200;
+}
+
+.section-title {
+  @apply text-hero font-bold text-neutral-900;
+}
+
+.subheadline {
+  @apply text-subheadline text-secondary-text max-w-xl;
+}
+
+/* Layout Classes */
+.hero-grid {
+  @apply grid grid-cols-1 md:grid-cols-2 items-center gap-10 py-section;
+}
+
+.hero-left {
+  @apply flex flex-col gap-6;
+}
+
+.hero-right {
+  @apply hidden md:block;
+}
+
+.features-container {
+  @apply grid grid-cols-1 md:grid-cols-3 gap-card-gap py-section bg-neutral-100;
+}
+
+.feature-item {
+  @apply card text-center;
+}
+
+.footer-wrapper {
+  @apply grid grid-cols-2 md:grid-cols-4 gap-8 bg-neutral-100 p-10 text-sm text-secondary-text;
+} 

@@ -1,0 +1,25 @@
+fastapi>=0.103.1
+uvicorn>=0.23.2
+pydantic>=2.3.0
+python-jose>=3.3.0
+passlib>=1.7.4
+python-multipart>=0.0.6
+sqlalchemy>=2.0.20
+psycopg2-binary>=2.9.7
+python-dotenv>=1.0.0
+web3>=6.9.0
+boto3==1.29.3
+python-jose[cryptography]==3.3.0
+alembic==1.12.1
+pytest>=7.4.2
+httpx>=0.24.1
+# Performance optimization packages
+uvloop>=0.17.0
+httptools>=0.6.0
+aiofiles>=23.1.0
+asyncpg>=0.28.0
+orjson>=3.9.5
+cachetools>=5.3.1
+aiocache>=0.12.1
+redis>=5.0.0
+lru-dict>=1.2.0 
