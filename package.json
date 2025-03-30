@@ -1,0 +1,13 @@
+{
+  "dependencies": {
+    "ethers": "^6.13.5"
+  },
+  "scripts": {
+    "security-audit": "npm audit",
+    "security-fix": "npm audit fix",
+    "security-fix-force": "npm audit fix --force",
+    "update-deps": "npm update",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix"
+  }
+}

@@ -1,6 +1,6 @@
 # SmartRent - Blockchain-Based Rental Platform
 
-## Current State (March 2024)
+## Current State (April 2024)
 
 ### Completed Features
 - ✅ Basic React application structure with routing
@@ -11,11 +11,23 @@
 - ✅ Authentication context setup
 - ✅ Code splitting and lazy loading implementation
 - ✅ Performance optimizations for components
+- ✅ Web3/Ethers.js integration with current version
+- ✅ Security configurations and middleware
+- ✅ Error handling with error boundaries
+- ✅ Basic FastAPI backend setup
+- ✅ Smart contract for property rentals
+- ✅ Protected routes based on user roles
+
+### In Progress
+- ⏳ Backend API endpoint implementation
+- ⏳ Blockchain event listeners
+- ⏳ User account management features
+- ⏳ Form validation and input sanitization
 
 ### Known Issues
-- ⚠️ Web3/Ethers.js integration temporarily disabled due to compatibility issues
 - ⚠️ Some npm package vulnerabilities need to be addressed
-- ⚠️ Backend API integration pending
+- ⚠️ Smart contract needs testing on a testnet
+- ⚠️ Backend database migrations not yet implemented
 
 ### Project Structure
 ```
