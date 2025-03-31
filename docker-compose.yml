@@ -3,13 +3,13 @@
 services:
   # PostgreSQL Database
   db:
-    image: postgres:13-alpine
+    image: postgres:13
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=smartrent
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
     ports:
       - "5432:5432"
     healthcheck:
@@ -20,7 +20,9 @@ services:
 
   # FastAPI Backend
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
     volumes:
       - ./backend:/app
     env_file:
@@ -31,6 +33,11 @@ services:
       db:
         condition: service_healthy
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    environment:
+      - DATABASE_URI=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - SECRET_KEY=${SECRET_KEY}
+      - WEB3_PROVIDER_URI=${WEB3_PROVIDER_URI}
+      - CONTRACT_ADDRESS=${CONTRACT_ADDRESS}
 
   # React Frontend
   frontend:
@@ -47,6 +54,9 @@ services:
     depends_on:
       - backend
     command: npm start
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000/api/v1
+      - REACT_APP_CONTRACT_ADDRESS=${CONTRACT_ADDRESS}
 
   # Local Ethereum Node (Hardhat)
   hardhat:

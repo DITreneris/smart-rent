@@ -1,6 +1,26 @@
 {
   "dependencies": {
-    "ethers": "^6.13.5"
+    "ethers": "^6.13.5",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.22.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.26.10",
+    "@babel/preset-env": "^7.26.9",
+    "@babel/preset-react": "^7.26.3",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^14.3.1",
+    "@testing-library/user-event": "^14.5.2",
+    "@types/jest": "^29.5.14",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "babel-jest": "^29.7.0",
+    "identity-obj-proxy": "^3.0.0",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "ts-jest": "^29.1.2",
+    "typescript": "^5.3.3"
   },
   "scripts": {
     "security-audit": "npm audit",
@@ -8,6 +28,23 @@
     "security-fix-force": "npm audit fix --force",
     "update-deps": "npm update",
     "lint": "eslint src",
-    "lint:fix": "eslint src --fix"
+    "lint:fix": "eslint src --fix",
+    "test": "jest --passWithNoTests",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:ci": "jest --ci --coverage --maxWorkers=2",
+    "test:single": "jest -t",
+    "test:basic": "jest src/utils.test.js src/web3Utils.test.js src/button.test.js --no-cache",
+    "test:utils": "jest src/utils.test.js --no-cache",
+    "test:components": "jest src/button.test.js src/propertyCard.test.js --no-cache",
+    "test:contexts": "jest --testMatch '**/contexts/**/*.test.js' --no-cache",
+    "test:services": "jest --testMatch '**/services/**/*.test.ts'",
+    "test:web3": "jest src/web3Utils.test.js --no-cache",
+    "test:button": "jest src/button.test.js --no-cache",
+    "test:property": "jest src/propertyCard.test.js --no-cache",
+    "test:api": "jest src/apiService.test.js --no-cache",
+    "test:web3context": "jest src/contexts/web3Context.test.js --no-cache",
+    "test:form": "jest src/components/forms/PropertyForm.test.js --no-cache",
+    "test:all": "jest"
   }
 }

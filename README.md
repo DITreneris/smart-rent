@@ -1,145 +1,145 @@
-# SmartRent - Blockchain-Based Rental Platform
+# SmartRent
 
-## Current State (April 2024)
+A decentralized property rental platform built on blockchain technology.
 
-### Completed Features
-- ✅ Basic React application structure with routing
-- ✅ Role-based dashboard system (Landlord, Tenant, Admin)
-- ✅ Property listing with search and filters
-- ✅ Virtualized lists for better performance
-- ✅ Responsive UI with Tailwind CSS
-- ✅ Authentication context setup
-- ✅ Code splitting and lazy loading implementation
-- ✅ Performance optimizations for components
-- ✅ Web3/Ethers.js integration with current version
-- ✅ Security configurations and middleware
-- ✅ Error handling with error boundaries
-- ✅ Basic FastAPI backend setup
-- ✅ Smart contract for property rentals
-- ✅ Protected routes based on user roles
+![Version](https://img.shields.io/badge/version-0.5.0-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
 
-### In Progress
-- ⏳ Backend API endpoint implementation
-- ⏳ Blockchain event listeners
-- ⏳ User account management features
-- ⏳ Form validation and input sanitization
+## Overview
 
-### Known Issues
-- ⚠️ Some npm package vulnerabilities need to be addressed
-- ⚠️ Smart contract needs testing on a testnet
-- ⚠️ Backend database migrations not yet implemented
+SmartRent connects property owners with potential renters through a secure, transparent blockchain platform. The application streamlines the rental process from property listing to contract completion, with secure payments and verifiable property history.
 
-### Project Structure
-```
-frontend/
-├── src/
-│   ├── components/
-│   │   ├── dashboard/     # Role-specific dashboard components
-│   │   ├── layout/        # Layout components (Navbar, Footer)
-│   │   └── ui/           # Reusable UI components
-│   ├── contexts/         # React contexts (Auth, Web3)
-│   ├── pages/           # Page components
-│   └── utils/           # Utility functions
-```
+## Current Status (v0.5.0 - April 2025)
 
-## Getting Started
+SmartRent is currently in active development with the following features implemented:
+
+- ✅ Web3 wallet connection and authentication
+- ✅ Property listing and management
+- ✅ Smart contract integration
+- ✅ Comprehensive error handling
+- ✅ Blockchain event listeners
+- ✅ CI/CD pipeline
+- 🔄 Transaction monitoring (In Progress)
+- 🔄 Database migrations (In Progress)
+
+See our [Development Plan](./dev_plan.md) for detailed information about our progress and roadmap.
+
+## Features
+
+- **Property Management**: List, browse, and manage properties
+- **Web3 Integration**: Connect with MetaMask and other Ethereum wallets
+- **Smart Contracts**: Secure rental agreements on Ethereum blockchain
+- **User Dashboards**: Dedicated interfaces for property owners and renters
+- **Transaction Tracking**: Monitor and verify blockchain transactions
+
+## Tech Stack
+
+### Frontend
+- React with TypeScript
+- Ethers.js for blockchain interactions
+- CSS modules and TailwindCSS
+
+### Backend
+- FastAPI
+- MongoDB
+- Web3 event listeners
+
+### Smart Contracts
+- Solidity
+- OpenZeppelin
+- Hardhat
+
+## Development
 
 ### Prerequisites
-- Node.js (v16 or higher)
-- npm or yarn
-- MetaMask browser extension (for future Web3 integration)
+- Node.js (v16+)
+- Python (v3.9+)
+- MongoDB
+- Ethereum development environment (Hardhat)
 
-### Installation
+### Setup
+
 1. Clone the repository
-2. Install dependencies:
-   ```bash
-   cd frontend
-   npm install
-   ```
-3. Start the development server:
-   ```bash
-   npm start
-   ```
-
-### Environment Variables
-Create a `.env` file in the frontend directory with:
-```
-REACT_APP_API_URL=http://localhost:8000
-REACT_APP_ETH_USD_PRICE=1800
+```bash
+git clone https://github.com/yourusername/smart-rent.git
+cd smart-rent
 ```
 
-## Next Steps
+2. Install dependencies
+```bash
+# Frontend
+cd frontend
+npm install
 
-### High Priority
-1. Fix Web3/Ethers.js integration
-   - Update ethers.js to latest version
-   - Resolve private class field syntax issues
-   - Re-implement Web3Context
+# Backend
+cd ../backend
+pip install -r requirements.txt
+```
 
-2. Address Security Vulnerabilities
-   - Run `npm audit fix`
-   - Update dependencies to secure versions
-   - Review and update security configurations
+3. Set up environment variables
+```bash
+cp frontend/.env.example frontend/.env
+cp backend/.env.example backend/.env
+```
 
-3. Backend Integration
-   - Set up FastAPI backend
-   - Implement authentication endpoints
-   - Create property management API
-   - Add blockchain event listeners
+4. Run the development servers
+```bash
+# Frontend
+cd frontend
+npm run dev
 
-### Medium Priority
-1. Testing
-   - Add unit tests for components
-   - Implement integration tests
-   - Set up end-to-end testing
+# Backend
+cd ../backend
+uvicorn app.main:app --reload
+```
 
-2. Performance Optimization
-   - Implement proper caching
-   - Add service workers for offline support
-   - Optimize bundle size
+5. Run tests
+```bash
+# Frontend
+cd frontend
+npm test
 
-3. User Experience
-   - Add loading states
-   - Implement error boundaries
-   - Add form validation
-   - Improve mobile responsiveness
+# Backend
+cd ../backend
+pytest
+```
 
-### Low Priority
-1. Documentation
-   - Add JSDoc comments
-   - Create API documentation
-   - Write user guides
+## Testing
 
-2. Additional Features
-   - Add property favorites
-   - Implement messaging system
-   - Add payment history
-   - Create admin dashboard
+The project has a comprehensive testing infrastructure with:
 
-## Development Notes
+- Unit tests for utility functions and components
+- Integration tests for API endpoints
+- Smart contract tests for blockchain interactions
+- End-to-end tests for critical user flows
 
-### Performance Optimizations Implemented
-- React.memo for component memoization
-- useMemo and useCallback hooks
-- Virtualized lists for large datasets
-- Code splitting with lazy loading
-- Optimized re-renders
+See the [Testing Strategy](./dev_plan.md#testing-strategy) section in our development plan for more details.
 
-### Known Technical Debt
-- Web3 integration needs refactoring
-- Some components need better error handling
-- Missing proper TypeScript implementation
-- Incomplete test coverage
+## Deployment
+
+SmartRent uses GitHub Actions for continuous integration and deployment:
+
+- **Development**: Automatic testing and staging deployment from the `develop` branch
+- **Production**: Manual approval workflow for deploying to production from the `main` branch
+
+## Roadmap
+
+See our [ROADMAP.md](./ROADMAP.md) for detailed information about upcoming features and milestones.
 
 ## Contributing
+
 1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+Please refer to our [Code Review Process](./dev_plan.md#review-process) before submitting your PR.
 
 ## License
+
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Contact
-For any questions or concerns, please open an issue in the repository. 
+
+Project Link: [https://github.com/yourusername/smart-rent](https://github.com/yourusername/smart-rent) 

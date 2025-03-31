@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: smartrent
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: backend
+        image: ghcr.io/username/smartrent:main-backend
+        ports:
+        - containerPort: 8000
+        env:
+        - name: DATABASE_URI
+          valueFrom:
+            secretKeyRef:
+              name: smartrent-secrets
+              key: database_uri
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: smartrent-secrets
+              key: secret_key
+        - name: WEB3_PROVIDER_URI
+          valueFrom:
+            secretKeyRef:
+              name: smartrent-secrets
+              key: web3_provider_uri
+        - name: CONTRACT_ADDRESS
+          valueFrom:
+            secretKeyRef:
+              name: smartrent-secrets
+              key: contract_address
+        readinessProbe:
+          httpGet:
+            path: /api/v1/health
+            port: 8000
+          initialDelaySeconds: 15
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /api/v1/health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 30
+        resources:
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+          requests:
+            cpu: "200m"
+            memory: "256Mi" 

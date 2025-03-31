@@ -1,31 +1,32 @@
-from sqlalchemy import Column, String, Float, Boolean, ForeignKey, Text, DateTime, Integer
-from sqlalchemy.sql import func
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, String, Text, Numeric, ForeignKey, DateTime, JSON, Enum
+from sqlalchemy.dialects.postgresql import UUID
 import uuid
-
-from app.db.session import Base
+from datetime import datetime
+from app.db.base_class import Base
 
 class Property(Base):
     __tablename__ = "properties"
     
-    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    title = Column(String, index=True, nullable=False)
-    description = Column(Text, nullable=True)
-    address = Column(String, nullable=False)
-    city = Column(String, nullable=False)
-    state = Column(String, nullable=False)
-    zip_code = Column(String, nullable=False)
-    price = Column(Float, nullable=False)
-    bedrooms = Column(Integer, nullable=False)
-    bathrooms = Column(Float, nullable=False)
-    area = Column(Float, nullable=True)  # in square feet
-    image_urls = Column(String, nullable=True)  # JSON string of image URLs
-    available = Column(Boolean, default=True)
-    owner_id = Column(String, ForeignKey("users.id"), nullable=False)
-    blockchain_id = Column(String, nullable=True)  # Property ID on blockchain
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    title = Column(String, nullable=False)
+    description = Column(Text)
+    price = Column(Numeric, nullable=False)
+    bedrooms = Column(Numeric, default=1)
+    bathrooms = Column(Numeric, default=1)
+    area = Column(Numeric)
+    amenities = Column(JSON, default=list)
+    images = Column(JSON, default=list)
     
-    # Relationships
-    owner = relationship("User", back_populates="properties")
-    leases = relationship("Lease", back_populates="property") 
+    address = Column(JSON)
+    blockchain_id = Column(String, unique=True, nullable=True)
+    metadataURI = Column(String, nullable=True)
+    
+    status = Column(
+        Enum("available", "rented", "pending", name="property_status"),
+        default="available"
+    )
+    
+    owner_id = Column(UUID(as_uuid=True), ForeignKey("users.id"))
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow) 

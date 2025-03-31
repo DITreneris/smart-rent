@@ -1,158 +1,147 @@
-# SmartRent Development Roadmap
+# SmartRent Roadmap
 
-This document outlines the development plan for SmartRent, our blockchain-based rental platform. The roadmap is divided into phases with clear milestones and tasks.
+This roadmap outlines the development plan for SmartRent, detailing completed milestones, current work, and future plans.
 
-## Phase 1: Foundation (Completed ✅)
+## Current Version: v0.5.0 (April 2025)
 
-- ✅ Set up basic React application structure with routing
-- ✅ Implement role-based dashboard system (Landlord, Tenant, Admin)
-- ✅ Create property listing with search and filters
-- ✅ Implement virtualized lists for performance optimization
-- ✅ Build responsive UI with Tailwind CSS
-- ✅ Set up authentication context
-- ✅ Implement code splitting and lazy loading
-- ✅ Optimize component performance
+## Completed Milestones
 
-## Phase 2: Core Functionality (In Progress 🚧)
+### v0.1.0 (April 2024)
+- ✅ Project initialization
+- ✅ Repository setup
+- ✅ Basic project structure
 
-### Web3 Integration
-- ✅ Update ethers.js to latest version
-- ✅ Create Web3Context for wallet connection
-- ✅ Implement account and network detection
-- ✅ Create contract interaction helpers
-- ⏳ Add comprehensive transaction tracking
-- ⏳ Implement blockchain error handling
+### v0.2.0 (August 2024)
+- ✅ Project structure finalization
+- ✅ Initial component development
+- ✅ Basic UI design
 
-### Security Updates
-- ✅ Run security audits and fix critical vulnerabilities
-- ✅ Update dependencies to secure versions
-- ✅ Configure security headers
-- ✅ Implement input validation
-- ✅ Create error boundaries
-- ⏳ Complete security audit of all components
+### v0.3.0 (December 2024)
+- ✅ Frontend foundation
+- ✅ Basic API endpoints
+- ✅ Authentication system
 
-### Backend Development
-- ✅ Set up FastAPI project structure
-- ✅ Configure database connection
-- ✅ Create user and property models
-- ✅ Implement authentication endpoints
-- ✅ Create basic property management API
-- ⏳ Implement database migrations
-- ⏳ Add comprehensive API testing
-- ⏳ Create blockchain event listeners
-- ⏳ Complete API documentation
+### v0.4.0 (March 2025)
+- ✅ Basic Web3 integration
+- ✅ Initial property management system
+- ✅ Basic blockchain listeners
+- ✅ Development environment setup
 
-### Smart Contract Development
-- ✅ Create basic rental contract
-- ✅ Implement property listing functionality
-- ✅ Add rental and payment features
-- ⏳ Deploy to testnet
-- ⏳ Comprehensive testing
-- ⏳ Security audit
+### v0.5.0 (April 2025)
+- ✅ Completed wallet connection implementation
+- ✅ Added comprehensive error handling
+- ✅ Implemented blockchain event listeners
+- ✅ Set up CI/CD pipeline
+- ✅ Testing framework implementation
 
-## Phase 3: Quality Assurance (Next Focus)
+## Current Sprint Focus (Sprint 2 - April 2025)
 
-### Testing Infrastructure
-- [ ] Set up Jest and React Testing Library
-- [ ] Create component unit tests
-- [ ] Implement API integration tests
-- [ ] Add contract testing with Hardhat
-- [ ] Set up end-to-end testing with Cypress
-- [ ] Implement test coverage reporting
-- [ ] Create CI/CD pipeline
+### High Priority Tasks
+1. **Complete Web3 Integration** 🔄
+   - ✅ Update ethers.js to latest version
+   - ✅ Implement Web3Context
+   - ✅ Set up wallet connection
+   - ✅ Create contract interaction utilities
+   - 🔄 Add transaction monitoring (In Progress)
+   - 🔄 Implement receipt generation (In Progress)
 
-### Performance Optimization
-- [ ] Add React Query for efficient data fetching
-- [ ] Implement proper caching strategies
-- [ ] Add service workers for offline support
-- [ ] Optimize bundle size further
-- [ ] Set up performance monitoring
-- [ ] Implement lazy loading for images
-- [ ] Optimize blockchain interactions
+2. **Database Interactions** 🔄
+   - ✅ Set up database models
+   - ✅ Implement model relationships
+   - 🔄 Create migration scripts (In Progress)
+   - 🔄 Add data validation (In Progress)
 
-### User Experience Improvements
-- [ ] Add more detailed loading states
-- [ ] Improve form validation feedback
-- [ ] Create better mobile navigation
-- [ ] Implement notification system
-- [ ] Add dark mode support
-- [ ] Create guided onboarding flow
-- [ ] Improve accessibility
+3. **Testing Framework** 🔄
+   - ✅ Configure Jest for frontend
+   - ✅ Set up Pytest for backend
+   - ✅ Create basic test utilities
+   - ✅ Implement core utility tests
+   - ✅ Develop component tests
+   - ✅ Set up form validation tests
+   - 🔄 Add smart contract tests (In Progress)
+   - 🔄 Develop integration tests (In Progress)
 
-## Phase 4: Platform Enhancement
+4. **Security Enhancements** 🔄
+   - ✅ Add input validation on critical forms
+   - 🔄 Implement CSRF protection (In Progress)
+   - 🔄 Set up rate limiting (In Progress)
+   - ⏳ Configure wallet security (Planned)
 
-### Documentation
-- [ ] Add comprehensive JSDoc comments
-- [ ] Create API documentation with Swagger
-- [ ] Write user guides for landlords and tenants
-- [ ] Create developer documentation
-- [ ] Document smart contract functions
-- [ ] Add architecture diagrams
+## Upcoming Releases
 
-### Feature Expansion
-- [ ] Implement property favorites system
-- [ ] Add messaging between landlords and tenants
-- [ ] Create payment history tracking
-- [ ] Implement admin dashboard
-- [ ] Add analytics and reporting
-- [ ] Create rental reviews and ratings
-- [ ] Add maintenance request system
+### v0.6.0 (Planned: May 2025)
+- ⏳ Implement rental flow with smart contracts
+- ⏳ Add payment processing and receipt generation
+- ⏳ Create detailed property search and filters
+- ⏳ Set up user notifications system
+- ⏳ Integrate messaging system between landlords and tenants
 
-## Phase 5: Launch Preparation
+### v0.7.0 (Planned: June 2025)
+- ⏳ Add multi-platform support
+- ⏳ Implement user reviews and ratings
+- ⏳ Create analytics dashboard
+- ⏳ Set up automatic rental payment processing
+- ⏳ Develop multi-language support
 
-### Final Polishing
-- [ ] Conduct thorough security audit
-- [ ] Test across all major browsers
-- [ ] Ensure full accessibility compliance
-- [ ] Final performance optimization
-- [ ] Create backup and recovery procedures
+### v0.8.0 (Planned: July 2025)
+- ⏳ Add property verification system
+- ⏳ Implement dispute resolution mechanism
+- ⏳ Create renter verification features
+- ⏳ Set up property insurance integration
+- ⏳ Develop maintenance request system
 
-### Deployment
-- [ ] Set up production environment
-- [ ] Configure monitoring and alerts
-- [ ] Deploy smart contract to mainnet
-- [ ] Launch marketing website
-- [ ] Monitor initial user feedback
+### v0.9.0 (Planned: August 2025)
+- ⏳ Add advanced reporting features
+- ⏳ Implement property market analytics
+- ⏳ Create landlord performance metrics
+- ⏳ Set up automated marketing tools
+- ⏳ Develop property value assessment tools
 
-## Phase 6: Expansion and Scaling
+### v1.0.0 (Planned: September 2025)
+- ⏳ Full public release
+- ⏳ Complete property lifecycle management
+- ⏳ Finalized security audits
+- ⏳ Production deployment to mainnet
+- ⏳ Launch marketing campaign
 
-### Advanced Features
-- [ ] Multi-chain support
-- [ ] NFT property tokens
-- [ ] Decentralized identity verification
-- [ ] DAO governance for platform
-- [ ] Advanced analytics dashboard
-- [ ] Mobile app development
+## Long-term Vision
 
-### Business Development
-- [ ] Partner integration program
-- [ ] Referral system
-- [ ] Expanded payment options
-- [ ] Legal compliance across jurisdictions
-- [ ] Enterprise property management tools
+### Phase 2: Marketplace Expansion (Q4 2025)
+- ⏳ Mobile applications (iOS/Android)
+- ⏳ Property management service integrations
+- ⏳ Virtual property tours
+- ⏳ Cross-chain support
 
-## Timeline Estimates
+### Phase 3: Ecosystem Growth (2026)
+- ⏳ SmartRent DAO for governance
+- ⏳ Property fractionalization
+- ⏳ Rental insurance marketplace
+- ⏳ Community features and forums
 
-- **Phase 2 Completion**: End of Q2 2024
-- **Phase 3**: Q3 2024
-- **Phase 4**: Q4 2024
-- **Phase 5**: Q1 2025
-- **Phase 6**: Q2-Q4 2025
+### Phase 4: Enterprise Solutions (2026-2027)
+- ⏳ Enterprise property management tools
+- ⏳ Real estate developer integrations
+- ⏳ Property investment analytics
+- ⏳ Institution-grade security and compliance
 
 ## Success Metrics
 
-- User adoption rate (target: 100 users in first month)
-- Property listing growth (target: 500 properties in first quarter)
-- Transaction volume (target: 50 completed rentals in first quarter)
-- System uptime (target: 99.9%)
-- Mobile usage (target: 40% of total traffic)
-- User satisfaction (target: 4.5/5 average rating)
+We will measure our progress against the following success criteria:
 
-## Regular Maintenance Tasks
+### Technical
+- Test coverage > 80%
+- All critical tests passing
+- Performance metrics met
+- Security audit passed
+- Code quality standards maintained
 
-- Weekly security updates
-- Bi-weekly dependency reviews
-- Monthly performance assessment
-- Quarterly roadmap evaluation and adjustment
+### Business
+- Complete property lifecycle (list, rent, complete)
+- User accounts with wallet integration
+- Secure transaction processing
+- Responsive design for all screen sizes
+- Documented API for potential integrations
 
-*Note: This roadmap is a living document and will be updated as the project progresses and priorities shift.* 
+---
+
+This roadmap will be updated as the project progresses. Last updated: April 10, 2025 
