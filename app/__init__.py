@@ -1,0 +1,3 @@
+"""
+SmartRent application package.
+""" 

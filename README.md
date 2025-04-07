@@ -1,9 +1,9 @@
 # SmartRent
 
-A decentralized property rental platform built on blockchain technology.
+SmartRent is a decentralized property rental platform built on blockchain technology.
 
-![Version](https://img.shields.io/badge/version-0.5.0-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
+![Version](https://img.shields.io/badge/version-0.5.0-blue.svg)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
 
 ## Overview
 
@@ -15,116 +15,99 @@ SmartRent is currently in active development with the following features impleme
 
 - ✅ Web3 wallet connection and authentication
 - ✅ Property listing and management
-- ✅ Smart contract integration
-- ✅ Comprehensive error handling
+- ✅ JWT authentication with role-based access control
+- ✅ User authentication (traditional and wallet-based)
+- ✅ FastAPI application setup with middleware
 - ✅ Blockchain event listeners
 - ✅ CI/CD pipeline
 - 🔄 Transaction monitoring (In Progress)
 - 🔄 Database migrations (In Progress)
 
-See our [Development Plan](./dev_plan.md) for detailed information about our progress and roadmap.
+See [ROADMAP.md](./ROADMAP.md) for a comprehensive development timeline and future plans.
 
 ## Features
 
 - **Property Management**: List, browse, and manage properties
-- **Web3 Integration**: Connect with MetaMask and other Ethereum wallets
-- **Smart Contracts**: Secure rental agreements on Ethereum blockchain
-- **User Dashboards**: Dedicated interfaces for property owners and renters
+- **Web3 Integration**: Connect with Ethereum wallets
+- **Smart Contracts**: Secure rental agreements on blockchain
+- **User Authentication**: Traditional and wallet-based authentication
 - **Transaction Tracking**: Monitor and verify blockchain transactions
+
+## Technical Architecture
+
+SmartRent is built with:
+
+- **FastAPI** for high-performance API endpoints
+- **MongoDB** for flexible data storage
+- **Web3.py** for Ethereum blockchain integration
+- **Hyperledger Fabric** for private chain functionality
+- **JWT authentication** with refresh token support
+- **Cryptocurrency network** integrations
 
 ## Tech Stack
 
-### Frontend
-- React with TypeScript
-- Ethers.js for blockchain interactions
-- CSS modules and TailwindCSS
-
 ### Backend
-- FastAPI
+- FastAPI (Python)
 - MongoDB
 - Web3 event listeners
+
+### Frontend (Planned)
+- React with TypeScript
+- Ethers.js for blockchain interactions
+- Material UI components
 
 ### Smart Contracts
 - Solidity
 - OpenZeppelin
 - Hardhat
 
-## Development
+## Getting Started
 
 ### Prerequisites
-- Node.js (v16+)
-- Python (v3.9+)
-- MongoDB
-- Ethereum development environment (Hardhat)
 
-### Setup
+- Python 3.9+
+- MongoDB
+- Ethereum node (or testnet connection)
+- Hyperledger Fabric network (optional for development)
+
+### Installation
 
 1. Clone the repository
 ```bash
-git clone https://github.com/yourusername/smart-rent.git
+git clone https://github.com/DITreneris/smart-rent.git
 cd smart-rent
 ```
 
 2. Install dependencies
 ```bash
-# Frontend
-cd frontend
-npm install
-
-# Backend
-cd ../backend
 pip install -r requirements.txt
 ```
 
 3. Set up environment variables
 ```bash
-cp frontend/.env.example frontend/.env
-cp backend/.env.example backend/.env
+cp .env.example .env
+# Edit .env with your configuration
 ```
 
-4. Run the development servers
+4. Run the application
 ```bash
-# Frontend
-cd frontend
-npm run dev
-
-# Backend
-cd ../backend
-uvicorn app.main:app --reload
+python -m app.main
 ```
 
-5. Run tests
-```bash
-# Frontend
-cd frontend
-npm test
+## API Documentation
 
-# Backend
-cd ../backend
-pytest
-```
+Once the server is running, you can access the API documentation at:
+
+- Swagger UI: http://localhost:8000/docs
+- ReDoc: http://localhost:8000/redoc
 
 ## Testing
 
-The project has a comprehensive testing infrastructure with:
+The project has a comprehensive testing framework:
 
-- Unit tests for utility functions and components
+- Unit tests for utility functions and services
 - Integration tests for API endpoints
 - Smart contract tests for blockchain interactions
-- End-to-end tests for critical user flows
-
-See the [Testing Strategy](./dev_plan.md#testing-strategy) section in our development plan for more details.
-
-## Deployment
-
-SmartRent uses GitHub Actions for continuous integration and deployment:
-
-- **Development**: Automatic testing and staging deployment from the `develop` branch
-- **Production**: Manual approval workflow for deploying to production from the `main` branch
-
-## Roadmap
-
-See our [ROADMAP.md](./ROADMAP.md) for detailed information about upcoming features and milestones.
 
 ## Contributing
 
@@ -134,12 +117,14 @@ See our [ROADMAP.md](./ROADMAP.md) for detailed information about upcoming featu
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-Please refer to our [Code Review Process](./dev_plan.md#review-process) before submitting your PR.
-
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Contact
 
-Project Link: [https://github.com/yourusername/smart-rent](https://github.com/yourusername/smart-rent) 
+Project Link: [https://github.com/DITreneris/smart-rent](https://github.com/DITreneris/smart-rent)
+
+Last Updated: April, 2025
+Version: 0.5.2 
+  
