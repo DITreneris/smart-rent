@@ -1,128 +1,151 @@
 """
 Authentication dependencies for FastAPI.
 """
-from typing import Optional, Dict, Any
-from fastapi import Depends, HTTPException, status
+from typing import Optional, List, Union, Dict, Any
+from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer
-from app.auth.jwt import decode_token, verify_token_type
+from fastapi.security.utils import get_authorization_scheme_param
 
-# Configure OAuth2 password bearer for FastAPI
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/token")
+from app.auth.jwt import decode_token, verify_token_permissions
+from app.services.auth_service import AuthService
 
-async def get_current_user(token: str = Depends(oauth2_scheme)) -> Dict[str, Any]:
-    """
-    Get current user from JWT token.
+# Define OAuth2 password bearer scheme for token authentication
+oauth2_scheme = OAuth2PasswordBearer(
+    tokenUrl="api/auth/token",
+    auto_error=False
+)
+
+class RoleChecker:
+    """Dependency for checking user roles."""
     
-    Args:
-        token: JWT token from Authorization header
+    def __init__(self, allowed_roles: List[str]):
+        self.allowed_roles = allowed_roles
         
-    Returns:
-        User data from token
-        
-    Raises:
-        HTTPException: If token is invalid or user not found
-    """
-    # Decode token
-    payload = decode_token(token)
+    def __call__(self, token_data: Dict[str, Any] = Depends(oauth2_scheme)) -> Dict[str, Any]:
+        if not token_data:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authenticated"
+            )
+            
+        role = token_data.get("role")
+        if role not in self.allowed_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Role {role} not authorized to access this resource"
+            )
+            
+        return token_data
+
+class PermissionChecker:
+    """Dependency for checking user permissions."""
     
-    # Verify token type
-    if not verify_token_type(payload, "access"):
+    def __init__(self, required_permissions: List[str]):
+        self.required_permissions = required_permissions
+        
+    def __call__(self, token_data: Dict[str, Any] = Depends(oauth2_scheme)) -> Dict[str, Any]:
+        if not token_data:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authenticated"
+            )
+            
+        # Admin role has all permissions
+        if token_data.get("role") == "admin":
+            return token_data
+            
+        # Check specific permissions
+        if not verify_token_permissions(token_data, self.required_permissions):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Insufficient permissions to access this resource"
+            )
+            
+        return token_data
+
+async def get_token_from_header(request: Request) -> Optional[str]:
+    """Extract token from request header."""
+    authorization = request.headers.get("Authorization")
+    if not authorization:
+        return None
+        
+    scheme, token = get_authorization_scheme_param(authorization)
+    if scheme.lower() != "bearer":
+        return None
+        
+    return token
+
+async def get_token_from_cookie(request: Request) -> Optional[str]:
+    """Extract token from cookie."""
+    return request.cookies.get("access_token")
+
+async def get_token(
+    request: Request,
+    token_from_header: Optional[str] = Depends(get_token_from_header)
+) -> Optional[str]:
+    """Get token from header or cookie."""
+    if token_from_header:
+        return token_from_header
+        
+    return await get_token_from_cookie(request)
+
+async def get_current_token_data(token: Optional[str] = Depends(oauth2_scheme)) -> Dict[str, Any]:
+    """Get current token data from authorization header."""
+    if token is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token type",
+            detail="Not authenticated",
             headers={"WWW-Authenticate": "Bearer"}
         )
-    
-    # Extract user data from token
-    user_id = payload.get("sub")
+        
+    return decode_token(token)
+
+async def get_optional_token_data(token: Optional[str] = Depends(oauth2_scheme)) -> Optional[Dict[str, Any]]:
+    """Get token data if available, but don't require it."""
+    if token is None:
+        return None
+        
+    try:
+        return decode_token(token)
+    except HTTPException:
+        return None
+
+async def get_current_user(token_data: Dict[str, Any] = Depends(get_current_token_data)) -> Dict[str, Any]:
+    """Get current user from token data."""
+    user_id = token_data.get("sub")
     if user_id is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token content",
+            detail="Invalid token contents",
             headers={"WWW-Authenticate": "Bearer"}
         )
     
-    # In a real implementation, we would fetch the user from the database
-    # to ensure they still exist and are active
-    # For now, we'll just use the data from the token
+    # Get user from database
+    user = await AuthService.get_user_by_id(user_id)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
     
-    # Create user data dictionary
-    user_data = {
-        "id": user_id,
-        "email": payload.get("email"),
-        "role": payload.get("role", "user"),
-        "permissions": payload.get("permissions", [])
-    }
-    
-    return user_data
+    return user
 
 async def get_current_active_user(current_user: Dict[str, Any] = Depends(get_current_user)) -> Dict[str, Any]:
-    """
-    Get current active user.
-    
-    Args:
-        current_user: User data from token
-        
-    Returns:
-        User data if active
-        
-    Raises:
-        HTTPException: If user is inactive
-    """
-    # In a real implementation, we would check if the user is active in the database
-    # For now, we'll assume all authenticated users are active
-    
+    """Check that the current user is active."""
+    if not current_user.get("is_active", False):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Inactive user"
+        )
     return current_user
 
-def require_roles(required_roles: list[str]):
-    """
-    Dependency factory for requiring specific roles.
-    
-    Args:
-        required_roles: List of roles allowed to access the endpoint
-        
-    Returns:
-        Dependency function
-    """
-    async def role_checker(current_user: Dict[str, Any] = Depends(get_current_active_user)) -> Dict[str, Any]:
-        user_role = current_user.get("role")
-        if user_role not in required_roles:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"User role '{user_role}' does not have permission to access this resource"
-            )
-        return current_user
-    
-    return role_checker
+# Role-specific dependencies
+get_admin_user = RoleChecker(allowed_roles=["admin"])
+get_landlord_user = RoleChecker(allowed_roles=["admin", "landlord"])
+get_tenant_user = RoleChecker(allowed_roles=["admin", "tenant"])
 
-def require_permissions(required_permissions: list[str]):
-    """
-    Dependency factory for requiring specific permissions.
-    
-    Args:
-        required_permissions: List of permissions required to access the endpoint
-        
-    Returns:
-        Dependency function
-    """
-    async def permission_checker(current_user: Dict[str, Any] = Depends(get_current_active_user)) -> Dict[str, Any]:
-        user_permissions = current_user.get("permissions", [])
-        
-        # Check if user has all required permissions
-        missing_permissions = [p for p in required_permissions if p not in user_permissions]
-        
-        if missing_permissions:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Missing required permissions: {', '.join(missing_permissions)}"
-            )
-        
-        return current_user
-    
-    return permission_checker
-
-# Common role-based dependencies
-require_admin = require_roles(["admin"])
-require_landlord = require_roles(["admin", "landlord"])
-require_tenant = require_roles(["admin", "tenant"])
-require_any_user = require_roles(["admin", "landlord", "tenant", "user"]) 
+# Commonly used permission checkers
+can_manage_properties = PermissionChecker(required_permissions=["manage:properties"])
+can_view_reports = PermissionChecker(required_permissions=["view:reports"])
+can_process_payments = PermissionChecker(required_permissions=["process:payments"]) 

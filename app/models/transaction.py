@@ -7,15 +7,21 @@ import enum
 from datetime import datetime
 from sqlalchemy import Column, String, DateTime, Numeric, Enum, JSON, ForeignKey
 from sqlalchemy.orm import relationship
+from typing import Dict, Any, Optional, List
+from pydantic import BaseModel, Field
 
 from app.db.base import Base
 
 
 class TransactionStatus(str, enum.Enum):
-    """Transaction status enumeration."""
+    """Enum for transaction status values."""
     PENDING = "pending"
-    COMPLETED = "completed"
-    FAILED = "failed"
+    CONFIRMING = "confirming"
+    CONFIRMED = "confirmed"
+    VERIFIED = "verified"
+    VERIFICATION_FAILED = "verification_failed"
+    ERROR = "error"
+    TIMEOUT = "timeout"
     CANCELLED = "cancelled"
 
 
@@ -26,6 +32,64 @@ class TransactionType(str, enum.Enum):
     DEPOSIT_RETURN = "deposit_return"
     MAINTENANCE = "maintenance"
     OTHER = "other"
+
+
+class VerificationResult(BaseModel):
+    """Model for transaction verification results."""
+    success: bool
+    details: Dict[str, Any] = {}
+    network_confirmations: Optional[int] = None
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    
+
+class TransactionBase(BaseModel):
+    """Base transaction model."""
+    tx_hash: str
+    tx_type: str
+    from_address: str
+    to_address: str
+    value: float
+    currency: str
+    status: TransactionStatus = TransactionStatus.PENDING
+    network: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class TransactionCreate(TransactionBase):
+    """Model for creating a new transaction."""
+    pass
+
+
+class TransactionUpdate(BaseModel):
+    """Model for updating a transaction."""
+    status: Optional[TransactionStatus] = None
+    confirmations: Optional[int] = None
+    verified: Optional[bool] = None
+    verification_result: Optional[Dict[str, Any]] = None
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class TransactionDB(TransactionBase):
+    """Database model for transaction."""
+    id: str
+    confirmations: int = 0
+    verified: bool = False
+    verification_result: Optional[Dict[str, Any]] = None
+    block_number: Optional[int] = None
+    block_timestamp: Optional[datetime] = None
+    gas_used: Optional[int] = None
+    gas_price: Optional[float] = None
+    fee: Optional[float] = None
+    related_entity_id: Optional[str] = None
+    related_entity_type: Optional[str] = None
+    metadata: Dict[str, Any] = {}
+    updated_at: Optional[datetime] = None
+
+
+class TransactionResponse(TransactionDB):
+    """API response model for transaction."""
+    class Config:
+        orm_mode = True
 
 
 class Transaction(Base):

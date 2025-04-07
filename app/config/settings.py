@@ -1,49 +1,79 @@
 """
 SmartRent application settings.
 """
-from typing import Optional
+from typing import List, Union, Optional
 import os
-from pydantic import BaseSettings
+from pydantic import BaseSettings, AnyHttpUrl, validator
 
 class Settings(BaseSettings):
     """Application settings."""
     
-    # Database
-    MONGODB_URI: str = os.getenv("MONGODB_URI", "mongodb://localhost:27017")
-    DATABASE_NAME: str = os.getenv("DATABASE_NAME", "smartrent_dev")
+    # API Configuration
+    API_HOST: str = "0.0.0.0"
+    API_PORT: int = 8000
+    DEBUG: bool = True
+    ENVIRONMENT: str = "development"  # development, staging, production
+    LOG_LEVEL: str = "INFO"
     
-    # Web3 Provider
-    WEB3_PROVIDER_URI: str = os.getenv("WEB3_PROVIDER_URI", "http://localhost:8545")
-    CHAIN_ID: int = int(os.getenv("CHAIN_ID", "1"))
-    
-    # Authentication
-    SECRET_KEY: str = os.getenv("SECRET_KEY", "supersecretkey")
-    ALGORITHM: str = "HS256"
+    # JWT Authentication
+    SECRET_KEY: str = "your_jwt_secret_key_here"
+    REFRESH_TOKEN_SECRET_KEY: str = "your_refresh_token_secret_key_here"
+    JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     
-    # Smart Contract
-    SMARTRENT_CONTRACT_ADDRESS: str = os.getenv(
-        "SMARTRENT_CONTRACT_ADDRESS", 
-        "0x0000000000000000000000000000000000000000"
-    )
+    # MongoDB Configuration
+    MONGODB_URL: str = "mongodb://localhost:27017/"
+    MONGODB_DB_NAME: str = "smartrent"
+    
+    # Blockchain Configuration
+    ETHEREUM_RPC_URL: str = "https://goerli.infura.io/v3/your_infura_key_here"
+    ETHEREUM_CHAIN_ID: int = 5  # Goerli testnet
     
     # Transaction Monitoring
-    TX_POLLING_INTERVAL: int = int(os.getenv("TX_POLLING_INTERVAL", "5"))  # seconds
-    TX_MAX_ATTEMPTS: int = int(os.getenv("TX_MAX_ATTEMPTS", "60"))  # 5 minutes at 5s interval
+    TX_POLLING_INTERVAL: int = 5  # seconds
+    TX_MAX_ATTEMPTS: int = 60  # 5 minutes at 5-second intervals
     
-    # Hyperledger Fabric
-    HYPERLEDGER_HOST: str = os.getenv("HYPERLEDGER_HOST", "localhost:7051")
-    HYPERLEDGER_CHANNEL: str = os.getenv("HYPERLEDGER_CHANNEL", "mychannel")
-    HYPERLEDGER_CHAINCODE: str = os.getenv("HYPERLEDGER_CHAINCODE", "smartrent")
+    # CORS Settings
+    CORS_ALLOWED_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:8000"]
     
-    # Cryptocurrency Networks
-    CRYPTO_API_KEY: str = os.getenv("CRYPTO_API_KEY", "")
+    @validator("CORS_ALLOWED_ORIGINS", pre=True)
+    def assemble_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:
+        """Parse CORS origins from string to list if needed."""
+        if isinstance(v, str) and not v.startswith("["):
+            return [i.strip() for i in v.split(",")]
+        elif isinstance(v, (list, str)):
+            return v
+        raise ValueError(v)
+    
+    # Security Settings
+    RATE_LIMIT_PER_MINUTE: int = 100
+    
+    # Email Settings (Optional)
+    SMTP_SERVER: Optional[str] = None
+    SMTP_PORT: Optional[int] = None
+    SMTP_USERNAME: Optional[str] = None
+    SMTP_PASSWORD: Optional[str] = None
+    EMAIL_FROM: Optional[str] = None
+    
+    # Feature Flags
+    ENABLE_WALLET_AUTH: bool = True
+    ENABLE_GOOGLE_AUTH: bool = False
+    ENABLE_DOCUMENT_STORAGE: bool = True
     
     class Config:
         """Pydantic config."""
         env_file = ".env"
         env_file_encoding = "utf-8"
+        case_sensitive = True
 
 
 # Create settings instance
-settings = Settings() 
+settings = Settings()
+
+# Override settings with environment variables
+if os.getenv("SECRET_KEY"):
+    settings.SECRET_KEY = os.getenv("SECRET_KEY")
+
+if os.getenv("REFRESH_TOKEN_SECRET_KEY"):
+    settings.REFRESH_TOKEN_SECRET_KEY = os.getenv("REFRESH_TOKEN_SECRET_KEY") 

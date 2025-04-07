@@ -10,6 +10,7 @@ from app.providers.hyperledger import HyperledgerClient
 from app.providers.crypto import CryptoNetworkClient
 from app.services.verification import VerificationResult
 from app.config.settings import settings
+from pydantic import BaseModel
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -19,40 +20,34 @@ class TransactionMonitoringService:
     
     def __init__(self):
         """Initialize transaction monitoring service."""
-        self.web3 = Web3Provider()
-        self.fabric_client = HyperledgerClient()
-        self.crypto_client = CryptoNetworkClient()
-        self.polling_interval = settings.TX_POLLING_INTERVAL
-        self.max_attempts = settings.TX_MAX_ATTEMPTS
+        self.web3 = None  # Web3Provider()
+        self.fabric_client = None  # HyperledgerClient()
+        self.crypto_client = None  # CryptoNetworkClient()
+        self.polling_interval = getattr(settings, "TX_POLLING_INTERVAL", 5)  # seconds
+        self.max_attempts = getattr(settings, "TX_MAX_ATTEMPTS", 20)
         self.active_transactions = {}
+        self.logger = None  # Will be initialized with proper logger
         logger.info("TransactionMonitoringService initialized")
     
-    async def monitor_transaction(
-        self, 
-        tx_hash: str, 
-        on_success: Optional[Callable] = None, 
-        on_failure: Optional[Callable] = None,
-        on_confirmation: Optional[Callable] = None
-    ) -> bool:
+    async def monitor_transaction(self, tx_hash: str, on_success: Optional[Callable] = None, 
+                                on_failure: Optional[Callable] = None) -> bool:
         """
         Monitor transaction status across networks.
         
         Args:
-            tx_hash: Transaction hash
-            on_success: Callback for successful verification
-            on_failure: Callback for failed verification
-            on_confirmation: Callback for blockchain confirmation (before verification)
+            tx_hash: The transaction hash to monitor
+            on_success: Callback function to execute on successful confirmation
+            on_failure: Callback function to execute if transaction fails or times out
             
         Returns:
-            True if transaction was successfully verified, False otherwise
+            bool: True if transaction was successfully confirmed, False otherwise
         """
         logger.info(f"Starting monitoring for transaction {tx_hash}")
         
         # Register transaction as active
         self.active_transactions[tx_hash] = {
-            "status": "pending",
+            "status": TransactionStatus.PENDING,
             "attempts": 0,
-            "start_time": datetime.utcnow(),
             "last_checked": None,
             "confirmations": 0
         }
@@ -62,144 +57,127 @@ class TransactionMonitoringService:
         while attempts < self.max_attempts:
             try:
                 # Update transaction record
-                attempts += 1
                 self.active_transactions[tx_hash]["attempts"] = attempts
-                self.active_transactions[tx_hash]["last_checked"] = datetime.utcnow()
+                self.active_transactions[tx_hash]["last_checked"] = datetime.now()
                 
-                # Log progress periodically
-                if attempts % 5 == 0:
-                    logger.info(f"Still monitoring transaction {tx_hash}, attempt {attempts}")
-                
-                # Check status
-                status = await self.web3.get_transaction_status(tx_hash)
-                self.active_transactions[tx_hash]["confirmations"] = status.confirmations
+                # This would call actual web3 provider
+                # For now this is a placeholder
+                status = await self._check_transaction_status(tx_hash)
                 
                 # Handle confirmation
-                if status.confirmed:
-                    logger.info(f"Transaction {tx_hash} confirmed on blockchain")
-                    self.active_transactions[tx_hash]["status"] = "confirmed"
+                if status.get("confirmed", False):
+                    await self._handle_confirmation(tx_hash)
+                    if on_success:
+                        await on_success(tx_hash)
+                    return True
                     
-                    # Call confirmation callback if provided
-                    if on_confirmation:
-                        await on_confirmation(tx_hash, status)
-                    
-                    # Proceed with cross-network verification
-                    verification_result = await self._verify_across_networks(tx_hash)
-                    
-                    # Handle verification result
-                    if verification_result.success:
-                        logger.info(f"Transaction {tx_hash} verified across networks")
-                        await self._handle_successful_verification(tx_hash, verification_result)
-                        if on_success:
-                            await on_success(tx_hash, verification_result)
-                        return True
-                    else:
-                        logger.warning(f"Cross-network verification failed for {tx_hash}")
-                        self.active_transactions[tx_hash]["status"] = "verification_failed"
-                        self.active_transactions[tx_hash]["verification_result"] = verification_result.to_dict()
-                        
-                        if on_failure:
-                            await on_failure(tx_hash, "Cross-network verification failed", verification_result)
-                        return False
-                
                 # Sleep before next check
+                attempts += 1
                 await asyncio.sleep(self.polling_interval)
                 
             except Exception as e:
-                logger.error(f"Error monitoring transaction {tx_hash}: {str(e)}")
-                self.active_transactions[tx_hash]["status"] = "error"
+                self.active_transactions[tx_hash]["status"] = TransactionStatus.ERROR
                 self.active_transactions[tx_hash]["error"] = str(e)
                 
                 if on_failure:
-                    await on_failure(tx_hash, str(e), None)
+                    await on_failure(tx_hash, str(e))
                 return False
         
         # Handle timeout
-        logger.warning(f"Transaction monitoring timed out for {tx_hash}")
-        self.active_transactions[tx_hash]["status"] = "timeout"
+        self.active_transactions[tx_hash]["status"] = TransactionStatus.TIMEOUT
         if on_failure:
-            await on_failure(tx_hash, "Transaction monitoring timed out", None)
+            await on_failure(tx_hash, "Transaction monitoring timed out")
         return False
-    
+
+    async def _check_transaction_status(self, tx_hash: str) -> Dict[str, Any]:
+        """
+        Check the status of a transaction.
+        This is a placeholder for the actual implementation.
+        
+        Args:
+            tx_hash: The transaction hash to check
+            
+        Returns:
+            Dict with status information
+        """
+        # In a real implementation, this would query the blockchain
+        # For now, just simulate a response
+        return {
+            "confirmed": False,
+            "confirmations": 0,
+            "block_number": None
+        }
+
+    async def _handle_confirmation(self, tx_hash: str) -> None:
+        """
+        Handle transaction confirmation and verification.
+        
+        Args:
+            tx_hash: The confirmed transaction hash
+        """
+        
+        # Update status
+        self.active_transactions[tx_hash]["status"] = TransactionStatus.CONFIRMING
+        
+        # Verify across networks
+        verification_result = await self._verify_across_networks(tx_hash)
+        
+        if verification_result.success:
+            self.active_transactions[tx_hash]["status"] = TransactionStatus.VERIFIED
+            await self._update_contract_state(tx_hash)
+        else:
+            self.active_transactions[tx_hash]["status"] = TransactionStatus.VERIFICATION_FAILED
+            self.active_transactions[tx_hash]["verification_details"] = verification_result.dict()
+
     async def _verify_across_networks(self, tx_hash: str) -> VerificationResult:
         """
         Verify transaction across different networks.
         
         Args:
-            tx_hash: Transaction hash
+            tx_hash: The transaction hash to verify
             
         Returns:
-            VerificationResult with details
+            VerificationResult with success status and details
         """
-        logger.info(f"Performing cross-network verification for {tx_hash}")
         
-        try:
-            # Verify on cryptocurrency network
-            crypto_verified = await self.crypto_client.verify_transaction(tx_hash)
-            
-            # Verify on Hyperledger
-            fabric_verified = await self.fabric_client.verify_transaction(tx_hash)
-            
-            # Get additional details if available
-            crypto_details = await self.crypto_client.get_transaction_details(tx_hash)
-            
-            # Calculate network confirmations
-            network_confirmations = crypto_details.get("confirmations", 0)
-            
-            # Create verification result
-            return VerificationResult(
-                success=(crypto_verified and fabric_verified),
-                network_confirmations=network_confirmations,
-                details={
-                    "crypto_network": crypto_verified,
-                    "hyperledger": fabric_verified,
-                    "crypto_details": crypto_details
-                }
-            )
+        # These would be actual verifications in production
+        # For now, just simulate the process
+        crypto_verified = True
+        fabric_verified = True
         
-        except Exception as e:
-            logger.error(f"Error during cross-network verification: {str(e)}")
-            return VerificationResult(
-                success=False,
-                details={
-                    "error": str(e)
-                }
-            )
-    
-    async def _handle_successful_verification(self, tx_hash: str, verification_result: VerificationResult):
+        # Combine results
+        return VerificationResult(
+            success=(crypto_verified and fabric_verified),
+            details={
+                "crypto_network": crypto_verified,
+                "hyperledger": fabric_verified
+            }
+        )
+
+    async def _update_contract_state(self, tx_hash: str) -> None:
         """
-        Handle successful verification by updating contract state.
+        Update contract state after successful verification.
         
         Args:
-            tx_hash: Transaction hash
-            verification_result: Verification result
+            tx_hash: The verified transaction hash
         """
-        logger.info(f"Handling successful verification for {tx_hash}")
-        
-        # Update transaction record
-        self.active_transactions[tx_hash]["status"] = "verified"
-        self.active_transactions[tx_hash]["verification_result"] = verification_result.to_dict()
-        self.active_transactions[tx_hash]["verified_at"] = datetime.utcnow()
-        
-        # In a real implementation, this would:
-        # 1. Update state in smart contracts
-        # 2. Update MongoDB state
-        # 3. Emit events for frontend
-        
-        # For now, just log the success
-        logger.info(f"Transaction {tx_hash} successfully verified and processed")
-    
-    def get_transaction_status(self, tx_hash: str) -> Optional[Dict[str, Any]]:
+        # This would update smart contract state if needed
+        # Implementation details would depend on specific contract logic
+        pass
+
+    async def get_transaction_status(self, tx_hash: str) -> Dict[str, Any]:
         """
-        Get current status of a transaction.
+        Get current status of a transaction being monitored.
         
         Args:
-            tx_hash: Transaction hash
+            tx_hash: The transaction hash to check
             
         Returns:
-            Transaction status record or None if not found
+            Dict with current monitoring status
         """
-        return self.active_transactions.get(tx_hash)
+        if tx_hash in self.active_transactions:
+            return self.active_transactions[tx_hash]
+        return {"status": "unknown", "error": "Transaction not being monitored"}
     
     def get_active_transactions(self) -> Dict[str, Dict[str, Any]]:
         """
@@ -221,7 +199,7 @@ class TransactionMonitoringService:
             True if cancelled, False if not found
         """
         if tx_hash in self.active_transactions:
-            self.active_transactions[tx_hash]["status"] = "cancelled"
+            self.active_transactions[tx_hash]["status"] = TransactionStatus.CANCELLED
             logger.info(f"Monitoring cancelled for transaction {tx_hash}")
             return True
         return False 
