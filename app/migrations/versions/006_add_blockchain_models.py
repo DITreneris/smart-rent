@@ -27,13 +27,13 @@ def upgrade():
         sa.Column('is_active', sa.Boolean, default=True),
         sa.Column('status', sa.String(20), nullable=False, default='pending'),
         sa.Column('created_at', sa.DateTime, default=sa.func.now()),
-        sa.Column('updated_at', sa.DateTime, default=sa.func.now(), onupdate=sa.func.now()),
+        sa.Column('updated_at', sa.DateTime, default=sa.func.now()),
         sa.Column('blockchain_tx_id', sa.String(255), nullable=True),
         sa.Column('meta_data', sa.JSON, nullable=True),
         sa.Column('property_id', sa.String(36), nullable=False),
         sa.Column('tenant_id', sa.String(36), nullable=False),
-        sa.ForeignKeyConstraint(['property_id'], ['properties.id'], ondelete='CASCADE'),
-        sa.ForeignKeyConstraint(['tenant_id'], ['users.id'], ondelete='CASCADE')
+        sa.ForeignKeyConstraint(['property_id'], ['properties.id'], name='fk_proposal_property', ondelete='CASCADE'),
+        sa.ForeignKeyConstraint(['tenant_id'], ['users.id'], name='fk_proposal_tenant', ondelete='CASCADE')
     )
 
     # Create contract_assets table
@@ -48,15 +48,15 @@ def upgrade():
         sa.Column('conditions', sa.Text, nullable=True),
         sa.Column('blockchain_id', sa.String(255), unique=True, nullable=True),
         sa.Column('created_at', sa.DateTime, default=sa.func.now()),
-        sa.Column('updated_at', sa.DateTime, default=sa.func.now(), onupdate=sa.func.now()),
+        sa.Column('updated_at', sa.DateTime, default=sa.func.now()),
         sa.Column('status', sa.String(20), nullable=False, default='draft'),
         sa.Column('landlord_id', sa.String(36), nullable=False),
         sa.Column('tenant_id', sa.String(36), nullable=True),
         sa.Column('landlord_signature', sa.String(255), nullable=True),
         sa.Column('tenant_signature', sa.String(255), nullable=True),
-        sa.ForeignKeyConstraint(['property_id'], ['properties.id'], ondelete='CASCADE'),
-        sa.ForeignKeyConstraint(['landlord_id'], ['users.id'], ondelete='CASCADE'),
-        sa.ForeignKeyConstraint(['tenant_id'], ['users.id'], ondelete='SET NULL')
+        sa.ForeignKeyConstraint(['property_id'], ['properties.id'], name='fk_contract_property', ondelete='CASCADE'),
+        sa.ForeignKeyConstraint(['landlord_id'], ['users.id'], name='fk_contract_landlord', ondelete='CASCADE'),
+        sa.ForeignKeyConstraint(['tenant_id'], ['users.id'], name='fk_contract_tenant', ondelete='SET NULL')
     )
 
     # Create property_photos table
@@ -71,8 +71,8 @@ def upgrade():
         sa.Column('description', sa.String(255), nullable=True),
         sa.Column('is_primary', sa.String(1), default='0'),
         sa.Column('created_at', sa.DateTime, default=sa.func.now()),
-        sa.Column('updated_at', sa.DateTime, default=sa.func.now(), onupdate=sa.func.now()),
-        sa.ForeignKeyConstraint(['property_id'], ['properties.id'], ondelete='CASCADE')
+        sa.Column('updated_at', sa.DateTime, default=sa.func.now()),
+        sa.ForeignKeyConstraint(['property_id'], ['properties.id'], name='fk_photo_property', ondelete='CASCADE')
     )
 
     # Create rental_info table
@@ -91,10 +91,10 @@ def upgrade():
         sa.Column('status', sa.String(20), nullable=False, default='pending'),
         sa.Column('blockchain_tx_id', sa.String(255), nullable=True),
         sa.Column('created_at', sa.DateTime, default=sa.func.now()),
-        sa.Column('updated_at', sa.DateTime, default=sa.func.now(), onupdate=sa.func.now()),
-        sa.ForeignKeyConstraint(['property_id'], ['properties.id'], ondelete='CASCADE'),
-        sa.ForeignKeyConstraint(['tenant_id'], ['users.id'], ondelete='SET NULL'),
-        sa.ForeignKeyConstraint(['highest_proposal_id'], ['proposals.id'], ondelete='SET NULL')
+        sa.Column('updated_at', sa.DateTime, default=sa.func.now()),
+        sa.ForeignKeyConstraint(['property_id'], ['properties.id'], name='fk_rentalinfo_property', ondelete='CASCADE'),
+        sa.ForeignKeyConstraint(['tenant_id'], ['users.id'], name='fk_rentalinfo_tenant', ondelete='SET NULL'),
+        sa.ForeignKeyConstraint(['highest_proposal_id'], ['proposals.id'], name='fk_rentalinfo_proposal', ondelete='SET NULL')
     )
 
     # Create payments table
@@ -112,9 +112,9 @@ def upgrade():
         sa.Column('next_payment_status', sa.String(20), nullable=True),
         sa.Column('final_payment_date', sa.DateTime, nullable=True),
         sa.Column('created_at', sa.DateTime, default=sa.func.now()),
-        sa.Column('updated_at', sa.DateTime, default=sa.func.now(), onupdate=sa.func.now()),
+        sa.Column('updated_at', sa.DateTime, default=sa.func.now()),
         sa.Column('payment_description', sa.String(255), nullable=True),
-        sa.ForeignKeyConstraint(['contract_id'], ['contract_assets.id'], ondelete='CASCADE')
+        sa.ForeignKeyConstraint(['contract_id'], ['contract_assets.id'], name='fk_payment_contract', ondelete='CASCADE')
     )
 
     # Create documents table
@@ -129,38 +129,35 @@ def upgrade():
         sa.Column('document_data', sa.LargeBinary, nullable=True),
         sa.Column('encryption_method', sa.String(100), nullable=True),
         sa.Column('created_at', sa.DateTime, default=sa.func.now()),
-        sa.Column('updated_at', sa.DateTime, default=sa.func.now(), onupdate=sa.func.now()),
+        sa.Column('updated_at', sa.DateTime, default=sa.func.now()),
         sa.Column('document_type', sa.String(20), nullable=False, default='other'),
         sa.Column('description', sa.Text, nullable=True),
         sa.Column('blockchain_tx_id', sa.String(255), nullable=True),
         sa.Column('user_id', sa.String(36), nullable=False),
         sa.Column('property_id', sa.String(36), nullable=True),
         sa.Column('contract_id', sa.String(36), nullable=True),
-        sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
-        sa.ForeignKeyConstraint(['property_id'], ['properties.id'], ondelete='SET NULL'),
-        sa.ForeignKeyConstraint(['contract_id'], ['contract_assets.id'], ondelete='SET NULL')
+        sa.ForeignKeyConstraint(['user_id'], ['users.id'], name='fk_document_user', ondelete='CASCADE'),
+        sa.ForeignKeyConstraint(['property_id'], ['properties.id'], name='fk_document_property', ondelete='SET NULL'),
+        sa.ForeignKeyConstraint(['contract_id'], ['contract_assets.id'], name='fk_document_contract', ondelete='SET NULL')
     )
 
-    # Add contract_id to transactions table
-    op.add_column(
-        'transactions', 
-        sa.Column('contract_id', sa.String(36), nullable=True)
-    )
-    
-    op.create_foreign_key(
-        'fk_transactions_contract',
-        'transactions',
-        'contract_assets',
-        ['contract_id'],
-        ['id'],
-        ondelete='SET NULL'
-    )
+    # Add contract_id to transactions table using batch mode
+    with op.batch_alter_table('transactions', schema=None) as batch_op:
+        batch_op.add_column(sa.Column('contract_id', sa.String(36), nullable=True))
+        batch_op.create_foreign_key(
+            'fk_transactions_contract',
+            'contract_assets',
+            ['contract_id'],
+            ['id'],
+            ondelete='SET NULL'
+        )
 
 
 def downgrade():
-    # Remove contract_id from transactions
-    op.drop_constraint('fk_transactions_contract', 'transactions', type_='foreignkey')
-    op.drop_column('transactions', 'contract_id')
+    # Remove contract_id from transactions using batch mode
+    with op.batch_alter_table('transactions', schema=None) as batch_op:
+        batch_op.drop_constraint('fk_transactions_contract', type_='foreignkey')
+        batch_op.drop_column('contract_id')
     
     # Drop tables in reverse order of creation (respecting foreign key constraints)
     op.drop_table('documents')

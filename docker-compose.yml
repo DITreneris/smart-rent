@@ -1,80 +1,83 @@
-: '3.8'
+version: '3.8'
 
 services:
-  # PostgreSQL Database
-  db:
-    image: postgres:13
-    volumes:
-      - postgres_data:/var/lib/postgresql/data/
-    environment:
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_DB}
-    ports:
-      - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
   # FastAPI Backend
-  backend:
+  api:
     build:
-      context: ./backend
-      dockerfile: Dockerfile.dev
-    volumes:
-      - ./backend:/app
-    env_file:
-      - ./backend/.env.docker
+      context: .
+      dockerfile: Dockerfile.api
     ports:
       - "8000:8000"
-    depends_on:
-      db:
-        condition: service_healthy
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
     environment:
-      - DATABASE_URI=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
-      - SECRET_KEY=${SECRET_KEY}
-      - WEB3_PROVIDER_URI=${WEB3_PROVIDER_URI}
-      - CONTRACT_ADDRESS=${CONTRACT_ADDRESS}
+      - MONGO_CONNECTION_STRING=${MONGO_CONNECTION_STRING}
+      - SOLANA_RPC_URL=${SOLANA_RPC_URL}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      - redis
+    volumes:
+      - ./app:/app
+    networks:
+      - smartrent-network
 
-  # React Frontend
+  # Redis for caching and rate limiting
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - smartrent-network
+
+  # Hyperledger Fabric Network
+  hyperledger-peer:
+    image: hyperledger/fabric-peer
+    environment:
+      - CORE_PEER_ID=peer0.org1.example.com
+      - CORE_PEER_ADDRESS=peer0.org1.example.com:7051
+      - CORE_PEER_LOCALMSPID=Org1MSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/msp/peer/
+    ports:
+      - "7051:7051"
+    volumes:
+      - ./crypto-config:/etc/hyperledger/msp
+      - ./chaincode:/chaincode
+    networks:
+      - smartrent-network
+
+  # Hyperledger Fabric CA
+  fabric-ca:
+    image: hyperledger/fabric-ca
+    environment:
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
+      - FABRIC_CA_SERVER_CA_NAME=ca.example.com
+    ports:
+      - "7054:7054"
+    volumes:
+      - ./fabric-ca:/etc/hyperledger/fabric-ca-server
+    networks:
+      - smartrent-network
+
+  # Frontend Development Server
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
     volumes:
       - ./frontend:/app
       - /app/node_modules
-    env_file:
-      - ./frontend/.env.docker
-    ports:
-      - "3000:3000"
-    depends_on:
-      - backend
-    command: npm start
     environment:
-      - REACT_APP_API_URL=http://localhost:8000/api/v1
-      - REACT_APP_CONTRACT_ADDRESS=${CONTRACT_ADDRESS}
-
-  # Local Ethereum Node (Hardhat)
-  hardhat:
-    build: ./ethereum
-    volumes:
-      - ./ethereum:/app
-      - /app/node_modules
-    ports:
-      - "8545:8545"
-    command: npx hardhat node
-
-  # Adminer for database management (optional)
-  adminer:
-    image: adminer
-    ports:
-      - "8080:8080"
-    depends_on:
-      - db
+      - REACT_APP_API_URL=http://localhost:8000
+      - REACT_APP_SOLANA_RPC_URL=${SOLANA_RPC_URL}
+    networks:
+      - smartrent-network
 
 volumes:
-  postgres_data: 
+  redis-data:
+
+networks:
+  smartrent-network:
+    driver: bridge 

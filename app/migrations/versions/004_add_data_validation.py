@@ -18,82 +18,44 @@ depends_on = None
 
 def upgrade():
     # Add validation constraints to properties table
-    op.create_check_constraint(
-        'check_property_price_positive',
-        'properties',
-        'price > 0'
-    )
-    
-    op.create_check_constraint(
-        'check_property_bedrooms_positive',
-        'properties',
-        'bedrooms > 0'
-    )
-    
-    op.create_check_constraint(
-        'check_property_bathrooms_positive',
-        'properties',
-        'bathrooms > 0'
-    )
-    
-    op.create_check_constraint(
-        'check_property_area_positive',
-        'properties',
-        'area > 0'
-    )
-    
+    with op.batch_alter_table('properties', schema=None) as batch_op:
+        batch_op.create_check_constraint('check_property_price_positive', 'price > 0')
+        batch_op.create_check_constraint('check_property_bedrooms_positive', 'bedrooms > 0')
+        batch_op.create_check_constraint('check_property_bathrooms_positive', 'bathrooms > 0')
+        batch_op.create_check_constraint('check_property_area_positive', 'area > 0')
+
     # Add validation constraints to users table
-    op.create_check_constraint(
-        'check_user_email_format',
-        'users',
-        "email REGEXP '^[A-Za-z0-9._%-]+@[A-Za-z0-9.-]+[.][A-Za-z]+$'"
-    )
-    
-    op.create_check_constraint(
-        'check_user_wallet_format',
-        'users',
-        "wallet_address IS NULL OR wallet_address REGEXP '^0x[a-fA-F0-9]{40}$'"
-    )
-    
+    with op.batch_alter_table('users', schema=None) as batch_op:
+        # Note: REGEXP might not be available by default in SQLite, depending on compilation.
+        # Consider alternative validation if this fails, or ensure REGEXP support.
+        batch_op.create_check_constraint('check_user_email_format', "email LIKE '%_@__%.__%'") # Simplified LIKE pattern
+        batch_op.create_check_constraint('check_user_wallet_format', "wallet_address IS NULL OR (wallet_address LIKE '0x%' AND length(wallet_address) = 42)") # Simplified check
+
     # Add validation constraints to transactions table
-    op.create_check_constraint(
-        'check_transaction_hash_format',
-        'transactions',
-        "hash IS NULL OR hash REGEXP '^0x[a-fA-F0-9]{64}$'"
-    )
-    
-    op.create_check_constraint(
-        'check_transaction_from_address_format',
-        'transactions',
-        "from_address IS NULL OR from_address REGEXP '^0x[a-fA-F0-9]{40}$'"
-    )
-    
-    op.create_check_constraint(
-        'check_transaction_to_address_format',
-        'transactions',
-        "to_address IS NULL OR to_address REGEXP '^0x[a-fA-F0-9]{40}$'"
-    )
-    
-    op.create_check_constraint(
-        'check_transaction_confirmations_positive',
-        'transactions',
-        'confirmations IS NULL OR confirmations >= 0'
-    )
+    with op.batch_alter_table('transactions', schema=None) as batch_op:
+        # Note: REGEXP might not be available by default in SQLite.
+        batch_op.create_check_constraint('check_transaction_hash_format', "hash IS NULL OR (hash LIKE '0x%' AND length(hash) = 66)") # Simplified check
+        batch_op.create_check_constraint('check_transaction_from_address_format', "from_address IS NULL OR (from_address LIKE '0x%' AND length(from_address) = 42)") # Simplified check
+        batch_op.create_check_constraint('check_transaction_to_address_format', "to_address IS NULL OR (to_address LIKE '0x%' AND length(to_address) = 42)") # Simplified check
+        batch_op.create_check_constraint('check_transaction_confirmations_positive', 'confirmations IS NULL OR confirmations >= 0')
 
 
 def downgrade():
     # Drop constraints from properties table
-    op.drop_constraint('check_property_price_positive', 'properties', type_='check')
-    op.drop_constraint('check_property_bedrooms_positive', 'properties', type_='check')
-    op.drop_constraint('check_property_bathrooms_positive', 'properties', type_='check')
-    op.drop_constraint('check_property_area_positive', 'properties', type_='check')
+    with op.batch_alter_table('properties', schema=None) as batch_op:
+        batch_op.drop_constraint('check_property_price_positive', type_='check')
+        batch_op.drop_constraint('check_property_bedrooms_positive', type_='check')
+        batch_op.drop_constraint('check_property_bathrooms_positive', type_='check')
+        batch_op.drop_constraint('check_property_area_positive', type_='check')
     
     # Drop constraints from users table
-    op.drop_constraint('check_user_email_format', 'users', type_='check')
-    op.drop_constraint('check_user_wallet_format', 'users', type_='check')
+    with op.batch_alter_table('users', schema=None) as batch_op:
+        batch_op.drop_constraint('check_user_email_format', type_='check')
+        batch_op.drop_constraint('check_user_wallet_format', type_='check')
     
     # Drop constraints from transactions table
-    op.drop_constraint('check_transaction_hash_format', 'transactions', type_='check')
-    op.drop_constraint('check_transaction_from_address_format', 'transactions', type_='check')
-    op.drop_constraint('check_transaction_to_address_format', 'transactions', type_='check')
-    op.drop_constraint('check_transaction_confirmations_positive', 'transactions', type_='check') 
+    with op.batch_alter_table('transactions', schema=None) as batch_op:
+        batch_op.drop_constraint('check_transaction_hash_format', type_='check')
+        batch_op.drop_constraint('check_transaction_from_address_format', type_='check')
+        batch_op.drop_constraint('check_transaction_to_address_format', type_='check')
+        batch_op.drop_constraint('check_transaction_confirmations_positive', type_='check') 

@@ -15,6 +15,11 @@ oauth2_scheme = OAuth2PasswordBearer(
     auto_error=False
 )
 
+# Import DB session dependency and User model
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.db.session import get_db # Assuming get_db is here
+from app.models.user import User # Import the User model
+
 class RoleChecker:
     """Dependency for checking user roles."""
     
@@ -110,8 +115,11 @@ async def get_optional_token_data(token: Optional[str] = Depends(oauth2_scheme))
     except HTTPException:
         return None
 
-async def get_current_user(token_data: Dict[str, Any] = Depends(get_current_token_data)) -> Dict[str, Any]:
-    """Get current user from token data."""
+async def get_current_user(
+    db: AsyncSession = Depends(get_db), # Add DB dependency
+    token_data: Dict[str, Any] = Depends(get_current_token_data)
+) -> User: # Change return type hint to User model
+    """Get current user model instance from token data."""
     user_id = token_data.get("sub")
     if user_id is None:
         raise HTTPException(
@@ -120,8 +128,8 @@ async def get_current_user(token_data: Dict[str, Any] = Depends(get_current_toke
             headers={"WWW-Authenticate": "Bearer"}
         )
     
-    # Get user from database
-    user = await AuthService.get_user_by_id(user_id)
+    # Get user model instance from database
+    user = await AuthService.get_user_by_id(db=db, user_id=user_id) # Pass db session
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -129,11 +137,11 @@ async def get_current_user(token_data: Dict[str, Any] = Depends(get_current_toke
             headers={"WWW-Authenticate": "Bearer"}
         )
     
-    return user
+    return user # Return the User model instance
 
-async def get_current_active_user(current_user: Dict[str, Any] = Depends(get_current_user)) -> Dict[str, Any]:
+async def get_current_active_user(current_user: User = Depends(get_current_user)) -> User: # Update type hint and return type
     """Check that the current user is active."""
-    if not current_user.get("is_active", False):
+    if not current_user.is_active: # Access attribute directly
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Inactive user"

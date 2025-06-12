@@ -18,6 +18,7 @@ class ProposalStatus(str, enum.Enum):
     REJECTED = "rejected"
     EXPIRED = "expired"
     CANCELLED = "cancelled"
+    CONFIRMED = "confirmed"
 
 
 class Proposal(Base):
@@ -27,12 +28,10 @@ class Proposal(Base):
     
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     tenant_signature = Column(String(255), nullable=True)
-    contract_id = Column(String(255), nullable=True)
     start_date = Column(DateTime, nullable=False)
     end_date = Column(DateTime, nullable=False)
     price_offer = Column(Numeric(10, 2), nullable=False)
     message = Column(Text, nullable=True)
-    is_active = Column(Boolean, default=True)
     status = Column(
         String(20),
         default=ProposalStatus.PENDING.value,
@@ -40,8 +39,8 @@ class Proposal(Base):
     )
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    blockchain_tx_id = Column(String(255), nullable=True)
-    meta_data = Column(JSON, nullable=True)
+    confirmation_tx_hash = Column(String(255), nullable=True)
+    metadata_uri = Column(String(255), nullable=True)
     
     # Foreign keys
     property_id = Column(
@@ -60,4 +59,50 @@ class Proposal(Base):
     tenant = relationship("User", backref="tenant_proposals")
     
     def __repr__(self):
-        return f"<Proposal {self.id}: {self.property_id} - {self.status}>" 
+        return f"<Proposal {self.id}: {self.property_id} - {self.status}>"
+
+# --- Pydantic Schemas --- 
+
+from pydantic import BaseModel, Field
+from typing import Optional
+
+
+class ProposalBase(BaseModel):
+    """Base schema for proposal data."""
+    property_id: str
+    start_date: datetime
+    end_date: datetime
+    price_offer: float # Assuming direct float mapping is okay
+    message: Optional[str] = None
+    tenant_signature: Optional[str] = None # If implemented
+
+    class Config:
+        orm_mode = True # Enable mapping from SQLAlchemy model
+
+
+class ProposalCreate(ProposalBase):
+    """Schema for creating a new proposal (tenant provides this)."""
+    pass # Inherits all fields from ProposalBase
+
+
+class ProposalUpdateStatus(BaseModel):
+    """Schema for updating proposal status (e.g., accept, reject, cancel)."""
+    status: ProposalStatus
+
+
+class ProposalResponse(ProposalBase):
+    """Schema for returning proposal data to the client."""
+    id: str # Use the string UUID from the model
+    tenant_id: str
+    status: ProposalStatus
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    confirmation_tx_hash: Optional[str] = None
+    metadata_uri: Optional[str] = None
+    
+    # Include related data if needed (requires configuration in endpoint)
+    # property: Optional[PropertyResponse] = None # Example
+    # tenant: Optional[UserResponse] = None      # Example
+
+    class Config:
+        orm_mode = True 

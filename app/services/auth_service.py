@@ -12,6 +12,8 @@ from app.auth.jwt import create_access_token, create_refresh_token, decode_refre
 from app.models.auth import TokenResponse, LoginRequest, RegisterRequest, UserResponse
 from app.models.user import User, UserCreate, UserUpdate
 from app.config.settings import settings
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -57,209 +59,161 @@ class AuthService:
         Returns:
             Secure random nonce string
         """
-        # Generate a random 16-byte nonce
-        nonce = os.urandom(16).hex()
-        return nonce
+        return os.urandom(16).hex()
     
     @staticmethod
-    async def get_user_by_id(user_id: str) -> Optional[Dict[str, Any]]:
+    async def get_user_by_id(db: AsyncSession, user_id: str) -> Optional[User]:
         """
-        Get user by ID.
+        Get user by ID from database (Async).
         
         Args:
-            user_id: User ID to lookup
+            db: The AsyncSession instance.
+            user_id: User ID to lookup.
             
         Returns:
-            User data or None if not found
+            SQLAlchemy User model instance or None if not found.
         """
-        # In a real implementation, this would query the database
-        # For demo purposes, we'll return mock data
-        # Replace with actual database query in production
-        
-        # Mock user database
-        users = {
-            "1": {
-                "id": "1",
-                "email": "admin@example.com",
-                "password_hash": AuthService.hash_password("admin123"),
-                "full_name": "Admin User",
-                "role": "admin",
-                "is_active": True,
-                "permissions": ["manage:all", "view:all"],
-                "created_at": datetime(2025, 1, 1)
-            },
-            "2": {
-                "id": "2",
-                "email": "landlord@example.com",
-                "password_hash": AuthService.hash_password("landlord123"),
-                "full_name": "Landlord User",
-                "role": "landlord",
-                "is_active": True,
-                "permissions": ["manage:properties", "view:reports"],
-                "created_at": datetime(2025, 1, 2)
-            },
-            "3": {
-                "id": "3",
-                "email": "tenant@example.com",
-                "password_hash": AuthService.hash_password("tenant123"),
-                "full_name": "Tenant User",
-                "role": "tenant",
-                "is_active": True,
-                "permissions": ["view:properties", "request:maintenance"],
-                "created_at": datetime(2025, 1, 3)
-            }
-        }
-        
-        return users.get(user_id)
+        logger.debug(f"Attempting to fetch user by ID: {user_id}")
+        try:
+            stmt = select(User).where(User.id == user_id)
+            result = await db.execute(stmt)
+            user = result.scalars().first()
+            if user:
+                 logger.debug(f"User found: {user.email}")
+            else:
+                 logger.debug(f"User with ID {user_id} not found.")
+            return user
+        except Exception as e:
+            logger.error(f"Database error fetching user by ID {user_id}: {e}", exc_info=True)
+            # Depending on policy, might re-raise or return None
+            # Returning None is often safer for auth checks
+            return None
     
     @staticmethod
-    async def get_user_by_email(email: str) -> Optional[Dict[str, Any]]:
+    async def get_user_by_email(db: AsyncSession, email: str) -> Optional[User]:
         """
-        Get user by email.
+        Get user by email from database (Async).
         
         Args:
-            email: Email to lookup
+            db: The AsyncSession instance.
+            email: Email to lookup.
             
         Returns:
-            User data or None if not found
+            SQLAlchemy User model instance or None if not found.
         """
-        # In a real implementation, this would query the database
-        # For now, we'll use the mock user database
-        users = [
-            {
-                "id": "1",
-                "email": "admin@example.com",
-                "password_hash": AuthService.hash_password("admin123"),
-                "full_name": "Admin User",
-                "role": "admin",
-                "is_active": True,
-                "permissions": ["manage:all", "view:all"],
-                "created_at": datetime(2025, 1, 1)
-            },
-            {
-                "id": "2",
-                "email": "landlord@example.com",
-                "password_hash": AuthService.hash_password("landlord123"),
-                "full_name": "Landlord User",
-                "role": "landlord",
-                "is_active": True,
-                "permissions": ["manage:properties", "view:reports"],
-                "created_at": datetime(2025, 1, 2)
-            },
-            {
-                "id": "3",
-                "email": "tenant@example.com",
-                "password_hash": AuthService.hash_password("tenant123"),
-                "full_name": "Tenant User",
-                "role": "tenant",
-                "is_active": True,
-                "permissions": ["view:properties", "request:maintenance"],
-                "created_at": datetime(2025, 1, 3)
-            }
-        ]
-        
-        for user in users:
-            if user["email"] == email:
-                return user
-                
-        return None
+        logger.debug(f"Attempting to fetch user by email: {email}")
+        try:
+            stmt = select(User).where(User.email == email)
+            result = await db.execute(stmt)
+            user = result.scalars().first()
+            if user:
+                 logger.debug(f"User found: {user.email}")
+            else:
+                 logger.debug(f"User with email {email} not found.")
+            return user
+        except Exception as e:
+            logger.error(f"Database error fetching user by email {email}: {e}", exc_info=True)
+            return None # Safer for auth checks
     
     @staticmethod
-    async def authenticate_user(email: str, password: str) -> Optional[Dict[str, Any]]:
+    async def authenticate_user(db: AsyncSession, email: str, password: str) -> Optional[User]:
         """
-        Authenticate user with email and password.
+        Authenticate user with email and password (Async).
         
         Args:
-            email: User email
-            password: User password
+            db: The AsyncSession instance.
+            email: User email.
+            password: User password.
             
         Returns:
-            User data if authentication successful, None otherwise
+            User model instance if authentication successful, None otherwise.
         """
-        # Get user from database
-        user = await AuthService.get_user_by_email(email)
+        user = await AuthService.get_user_by_email(db, email)
         if user is None:
+            logger.warning(f"Authentication failed: User not found for email {email}")
             return None
             
-        # Verify password
-        if not AuthService.verify_password(password, user["password_hash"]):
+        # Verify password (Sync operation)
+        if not AuthService.verify_password(password, user.hashed_password):
+            logger.warning(f"Authentication failed: Invalid password for email {email}")
             return None
             
-        # Check if user is active
-        if not user.get("is_active", False):
+        # Check if user is active (Sync operation)
+        if not user.is_active:
+            logger.warning(f"Authentication failed: User {email} is inactive.")
             return None
             
+        logger.info(f"User {email} authenticated successfully.")
         return user
     
     @staticmethod
-    async def login(login_data: LoginRequest) -> Optional[TokenResponse]:
+    async def login(db: AsyncSession, login_data: LoginRequest) -> Optional[TokenResponse]:
         """
-        Log in user with email and password.
-        
-        Args:
-            login_data: Login credentials
-            
-        Returns:
-            Token response with access and refresh tokens
+        Log in user with email and password (Async).
         """
-        # Authenticate user
-        user = await AuthService.authenticate_user(login_data.email, login_data.password)
+        # Authenticate user (Async)
+        user = await AuthService.authenticate_user(db, login_data.email, login_data.password)
         if user is None:
-            return None
+            return None # Auth failed
             
-        # Create tokens
-        access_token = create_access_token(user)
-        refresh_token = create_refresh_token(user["id"])
+        # Create tokens (Sync)
+        # Ensure create_access_token expects User model or adapt it
+        access_token = create_access_token(user) 
+        refresh_token = create_refresh_token(user.id)
+        
+        # Ensure UserResponse expects model or adapt it
+        user_response = UserResponse(
+            id=user.id,
+            email=user.email,
+            full_name=user.full_name,
+            role=user.role
+        )
         
         return TokenResponse(
             access_token=access_token,
             refresh_token=refresh_token,
             token_type="bearer",
-            user=UserResponse(
-                id=user["id"],
-                email=user["email"],
-                full_name=user.get("full_name", ""),
-                role=user.get("role", "user")
-            )
+            user=user_response
         )
     
     @staticmethod
-    async def refresh_token(refresh_token: str) -> Optional[TokenResponse]:
+    async def refresh_token(db: AsyncSession, refresh_token: str) -> Optional[TokenResponse]:
         """
-        Refresh access token using refresh token.
-        
-        Args:
-            refresh_token: Refresh token
-            
-        Returns:
-            Token response with new access token
+        Refresh access token using refresh token (Async).
         """
         try:
-            # Decode refresh token
+            # Decode refresh token (Sync)
             user_id = decode_refresh_token(refresh_token)
             
-            # Get user from database
-            user = await AuthService.get_user_by_id(user_id)
+            # Get user from database (Async)
+            user = await AuthService.get_user_by_id(db, user_id)
             if user is None:
+                logger.warning(f"Refresh token invalid: User ID {user_id} not found.")
                 return None
+            if not user.is_active:
+                 logger.warning(f"Refresh token invalid: User ID {user_id} is inactive.")
+                 return None
                 
-            # Create new access token
+            # Create new access token (Sync)
             access_token = create_access_token(user)
+            
+            # Ensure UserResponse expects model or adapt it
+            user_response = UserResponse(
+                 id=user.id,
+                 email=user.email,
+                 full_name=user.full_name,
+                 role=user.role
+            )
             
             return TokenResponse(
                 access_token=access_token,
-                refresh_token=refresh_token,  # Keep existing refresh token
+                refresh_token=refresh_token, # Usually return the same refresh token
                 token_type="bearer",
-                user=UserResponse(
-                    id=user["id"],
-                    email=user["email"],
-                    full_name=user.get("full_name", ""),
-                    role=user.get("role", "user")
-                )
+                user=user_response
             )
-        except Exception as e:
-            logger.error(f"Error refreshing token: {str(e)}")
-            return None
+        except Exception as e: # Catch potential decoding errors too
+             logger.error(f"Error refreshing token: {e}", exc_info=True)
+             return None
     
     @staticmethod
     async def register(user_data: RegisterRequest) -> Optional[UserResponse]:
@@ -273,7 +227,7 @@ class AuthService:
             Created user response
         """
         # Check if email already exists
-        existing_user = await AuthService.get_user_by_email(user_data.email)
+        existing_user = await AuthService.get_user_by_email(None, user_data.email)
         if existing_user is not None:
             return None
             
@@ -282,7 +236,7 @@ class AuthService:
         new_user = {
             "id": str(secrets.randbelow(1000000)),
             "email": user_data.email,
-            "password_hash": AuthService.hash_password(user_data.password),
+            "password_hash": AuthService.get_password_hash(user_data.password),
             "full_name": user_data.full_name,
             "role": "tenant",  # Default role for new users
             "is_active": True,

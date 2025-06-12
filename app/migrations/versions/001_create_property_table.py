@@ -34,7 +34,7 @@ def upgrade():
         sa.Column('status', sa.String(20), server_default='available'),
         sa.Column('owner_id', sa.String(36), sa.ForeignKey('users.id')),
         sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP')),
-        sa.Column('updated_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP')),
+        sa.Column('updated_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP')),
     )
     
     # Create indexes for common queries

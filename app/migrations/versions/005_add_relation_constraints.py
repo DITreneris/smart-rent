@@ -17,43 +17,43 @@ depends_on = None
 
 
 def upgrade():
-    # Add ON DELETE CASCADE for property owner relation
-    with op.batch_alter_table('properties') as batch_op:
-        batch_op.drop_constraint('properties_ibfk_1', type_='foreignkey')
+    # Add ON DELETE CASCADE for property owner relation using explicit FK name
+    with op.batch_alter_table('properties', schema=None) as batch_op:
+        # batch_op.drop_constraint('properties_ibfk_1', type_='foreignkey') # Don't drop if name is unknown/auto-generated
         batch_op.create_foreign_key(
-            'fk_property_owner',
+            'fk_property_owner', # Explicit name
             'users',
             ['owner_id'], ['id'],
             ondelete='CASCADE'
         )
     
-    # Add ON DELETE CASCADE for transaction user relation
-    with op.batch_alter_table('transactions') as batch_op:
-        batch_op.drop_constraint('transactions_ibfk_1', type_='foreignkey')
+    # Add ON DELETE CASCADE for transaction user relation using explicit FK name
+    with op.batch_alter_table('transactions', schema=None) as batch_op:
+        # batch_op.drop_constraint('transactions_ibfk_1', type_='foreignkey') # Don't drop if name is unknown/auto-generated
         batch_op.create_foreign_key(
-            'fk_transaction_user',
+            'fk_transaction_user', # Explicit name
             'users',
             ['user_id'], ['id'],
             ondelete='CASCADE'
         )
     
     # Make property_id nullable and add ON DELETE SET NULL for transaction property relation
-    with op.batch_alter_table('transactions') as batch_op:
-        batch_op.drop_constraint('transactions_ibfk_2', type_='foreignkey')
+    with op.batch_alter_table('transactions', schema=None) as batch_op:
+        # batch_op.drop_constraint('transactions_ibfk_2', type_='foreignkey') # Don't drop if name is unknown/auto-generated
         batch_op.alter_column('property_id', existing_type=sa.String(36), nullable=True)
         batch_op.create_foreign_key(
-            'fk_transaction_property',
+            'fk_transaction_property', # Explicit name
             'properties',
             ['property_id'], ['id'],
             ondelete='SET NULL'
         )
     
-    # Create rental_agreements table
+    # Create rental_agreements table (fix ON UPDATE clause)
     op.create_table(
         'rental_agreements',
         sa.Column('id', sa.String(36), primary_key=True),
-        sa.Column('property_id', sa.String(36), sa.ForeignKey('properties.id', ondelete='CASCADE'), nullable=False),
-        sa.Column('tenant_id', sa.String(36), sa.ForeignKey('users.id', ondelete='CASCADE'), nullable=False),
+        sa.Column('property_id', sa.String(36), sa.ForeignKey('properties.id', name='fk_rental_property', ondelete='CASCADE'), nullable=False), # Added name
+        sa.Column('tenant_id', sa.String(36), sa.ForeignKey('users.id', name='fk_rental_tenant', ondelete='CASCADE'), nullable=False), # Added name
         sa.Column('start_date', sa.DateTime(), nullable=False),
         sa.Column('end_date', sa.DateTime(), nullable=False),
         sa.Column('status', sa.String(20), server_default='pending'),
@@ -63,7 +63,8 @@ def upgrade():
         sa.Column('blockchain_id', sa.String(255), unique=True, nullable=True),
         sa.Column('metadata', sa.JSON),
         sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP')),
-        sa.Column('updated_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP')),
+        # Removed 'ON UPDATE CURRENT_TIMESTAMP' for SQLite compatibility
+        sa.Column('updated_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP')),
     )
     
     # Create indexes for rental agreements
@@ -72,60 +73,41 @@ def upgrade():
     op.create_index('idx_rental_status', 'rental_agreements', ['status'])
     op.create_index('idx_rental_dates', 'rental_agreements', ['start_date', 'end_date'])
     
-    # Add check constraints to rental_agreements
-    op.create_check_constraint(
-        'check_rental_dates_valid',
-        'rental_agreements',
-        'end_date > start_date'
-    )
-    
-    op.create_check_constraint(
-        'check_rental_rent_positive',
-        'rental_agreements',
-        'monthly_rent > 0'
-    )
-    
-    op.create_check_constraint(
-        'check_rental_deposit_positive',
-        'rental_agreements',
-        'security_deposit >= 0'
-    )
+    # Add check constraints to rental_agreements using batch mode
+    with op.batch_alter_table('rental_agreements', schema=None) as batch_op:
+        batch_op.create_check_constraint('check_rental_dates_valid', 'end_date > start_date')
+        batch_op.create_check_constraint('check_rental_rent_positive', 'monthly_rent > 0')
+        batch_op.create_check_constraint('check_rental_deposit_positive', 'security_deposit >= 0')
 
 
 def downgrade():
-    # Drop rental_agreements table and its constraints
-    op.drop_constraint('check_rental_dates_valid', 'rental_agreements', type_='check')
-    op.drop_constraint('check_rental_rent_positive', 'rental_agreements', type_='check')
-    op.drop_constraint('check_rental_deposit_positive', 'rental_agreements', type_='check')
+    # Drop rental_agreements table constraints using batch mode
+    with op.batch_alter_table('rental_agreements', schema=None) as batch_op:
+        batch_op.drop_constraint('check_rental_dates_valid', type_='check')
+        batch_op.drop_constraint('check_rental_rent_positive', type_='check')
+        batch_op.drop_constraint('check_rental_deposit_positive', type_='check')
     
-    op.drop_index('idx_rental_property', 'rental_agreements')
-    op.drop_index('idx_rental_tenant', 'rental_agreements')
-    op.drop_index('idx_rental_status', 'rental_agreements')
-    op.drop_index('idx_rental_dates', 'rental_agreements')
+    # Drop indexes (no batch mode needed for indexes)
+    op.drop_index('idx_rental_property', table_name='rental_agreements')
+    op.drop_index('idx_rental_tenant', table_name='rental_agreements')
+    op.drop_index('idx_rental_status', table_name='rental_agreements')
+    op.drop_index('idx_rental_dates', table_name='rental_agreements')
     
+    # Drop table (no batch mode needed)
     op.drop_table('rental_agreements')
     
-    # Restore original foreign keys and NOT NULL constraint
-    with op.batch_alter_table('transactions') as batch_op:
+    # Restore original foreign keys and NOT NULL constraint using explicit names
+    with op.batch_alter_table('transactions', schema=None) as batch_op:
         batch_op.drop_constraint('fk_transaction_property', type_='foreignkey')
         batch_op.alter_column('property_id', existing_type=sa.String(36), nullable=False)
-        batch_op.create_foreign_key(
-            'transactions_ibfk_2',
-            'properties',
-            ['property_id'], ['id']
-        )
+        # Cannot reliably recreate the original unnamed constraint, maybe omit or add simple FK?
+        # batch_op.create_foreign_key(None, 'properties', ['property_id'], ['id'])
         
         batch_op.drop_constraint('fk_transaction_user', type_='foreignkey')
-        batch_op.create_foreign_key(
-            'transactions_ibfk_1',
-            'users',
-            ['user_id'], ['id']
-        )
+        # Cannot reliably recreate the original unnamed constraint, maybe omit or add simple FK?
+        # batch_op.create_foreign_key(None, 'users', ['user_id'], ['id'])
     
-    with op.batch_alter_table('properties') as batch_op:
+    with op.batch_alter_table('properties', schema=None) as batch_op:
         batch_op.drop_constraint('fk_property_owner', type_='foreignkey')
-        batch_op.create_foreign_key(
-            'properties_ibfk_1',
-            'users',
-            ['owner_id'], ['id']
-        ) 
+        # Cannot reliably recreate the original unnamed constraint, maybe omit or add simple FK?
+        # batch_op.create_foreign_key(None, 'users', ['owner_id'], ['id']) 

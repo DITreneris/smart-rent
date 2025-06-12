@@ -36,7 +36,7 @@ def upgrade():
         sa.Column('user_id', sa.String(36), sa.ForeignKey('users.id'), nullable=False),
         sa.Column('property_id', sa.String(36), sa.ForeignKey('properties.id'), nullable=False),
         sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP')),
-        sa.Column('updated_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP')),
+        sa.Column('updated_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP')),
     )
     
     # Create indexes for common queries

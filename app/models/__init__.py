@@ -10,14 +10,11 @@ from app.models.user import User, UserRole
 from app.models.property import (
     PropertyType,
     PropertyStatus,
-    PropertyAmenity,
-    PropertyLocation,
     PropertyImage,
-    PropertyCreateRequest,
+    PropertyCreate,
     PropertyResponse,
-    PropertyUpdateRequest,
-    PropertySearchFilters,
-    PropertySearchResponse
+    PropertyUpdate,
+    PropertySearchParams,
 )
 from app.models.transaction import Transaction, TransactionStatus, TransactionType
 from app.models.proposal import Proposal, ProposalStatus
@@ -42,14 +39,11 @@ __all__ = [
     'UserRole',
     'PropertyType',
     'PropertyStatus',
-    'PropertyAmenity',
-    'PropertyLocation',
     'PropertyImage',
-    'PropertyCreateRequest',
+    'PropertyCreate',
     'PropertyResponse',
-    'PropertyUpdateRequest',
-    'PropertySearchFilters',
-    'PropertySearchResponse',
+    'PropertyUpdate',
+    'PropertySearchParams',
     'Transaction',
     'TransactionStatus',
     'TransactionType',

@@ -1,5 +1,10 @@
 module.exports = { 
-  solidity: "0.8.17", 
+  solidity: {
+    version: "0.8.20",
+    settings: {
+      // ... other settings ...
+    }
+  }, 
   networks: { 
     hardhat: { 
       chainId: 1337 

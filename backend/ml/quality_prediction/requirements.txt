@@ -1,0 +1,34 @@
+# Core dependencies
+pandas>=1.3.0
+numpy>=1.20.0
+scikit-learn>=1.0.0
+scipy>=1.7.0
+joblib>=1.0.1
+pyarrow>=6.0.0  # For parquet file support
+
+# ML frameworks
+lightgbm>=3.3.0
+
+# API and web
+fastapi>=0.75.0
+uvicorn>=0.17.0
+pydantic>=1.9.0
+
+# Data collection
+requests>=2.27.0
+gitpython>=3.1.0
+PyGithub>=1.55.0
+
+# Visualization (optional)
+matplotlib>=3.5.0
+seaborn>=0.11.0
+
+# Testing and development
+pytest>=7.0.0
+pytest-cov>=3.0.0
+black>=22.1.0
+flake8>=4.0.0
+
+# Utilities
+python-dotenv>=0.20.0
+tqdm>=4.62.0 

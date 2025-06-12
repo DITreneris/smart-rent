@@ -16,6 +16,11 @@ const PropertyListing = lazy(() => import('./pages/PropertyListing'));
 const WalletManagement = lazy(() => import('./pages/WalletManagement'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
+// MVP Rental Flow Pages
+const ProposalCreationPage = lazy(() => import('./pages/ProposalCreationPage'));
+const ProposalDisplayPage = lazy(() => import('./pages/ProposalDisplayPage'));
+const RentalConfirmationPage = lazy(() => import('./pages/RentalConfirmationPage'));
+
 // Loading spinner for lazy-loaded components
 const PageLoadingSpinner = () => (
   <div className="flex justify-center items-center h-[70vh]">
@@ -69,6 +74,31 @@ function App() {
               element={
                 <ProtectedRoute>
                   <WalletManagement />
+                </ProtectedRoute>
+              } 
+            />
+            {/* MVP Rental Flow Routes */}
+            <Route 
+              path="/propose-rental" 
+              element={
+                <ProtectedRoute>
+                  <ProposalCreationPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/proposals/:proposalId" 
+              element={
+                <ProtectedRoute>
+                  <ProposalDisplayPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/rental-confirmed/:transactionId" 
+              element={
+                <ProtectedRoute>
+                  <RentalConfirmationPage />
                 </ProtectedRoute>
               } 
             />

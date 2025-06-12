@@ -1,0 +1,94 @@
+name: Documentation Testing
+
+on:
+  push:
+    branches: [ develop, main ]
+    paths:
+      - 'docs/**'
+      - 'mkdocs.yml'
+  pull_request:
+    branches: [ develop, main ]
+    paths:
+      - 'docs/**'
+      - 'mkdocs.yml'
+
+jobs:
+  test-docs:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        cache: 'pip'
+    
+    - name: Install documentation dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install mkdocs-material mkdocs-minify-plugin mkdocs-git-revision-date-localized-plugin mkdocs-social pymdown-extensions
+    
+    - name: Build docs
+      run: |
+        mkdocs build --strict
+    
+    - name: Check for broken links
+      run: |
+        pip install linkchecker
+        linkchecker --check-extern ./site
+    
+    - name: Spellcheck documentation
+      uses: rojopolis/spellcheck-github-actions@0.24.0
+      with:
+        source_files: docs/**/*.md
+        task_name: Markdown
+        config_path: .github/spellcheck-config.yml
+    
+    - name: Check Markdown syntax
+      run: |
+        pip install mdformat
+        mdformat --check docs/
+    
+    - name: Validate mermaid diagrams
+      run: |
+        npm install -g @mermaid-js/mermaid-cli
+        find docs -name "*.md" -exec grep -l "```mermaid" {} \; | xargs -I{} sh -c 'echo "Validating {}" && mmdc -i {} -o /tmp/validate.svg'
+    
+    - name: Upload built site for preview
+      if: github.event_name == 'pull_request'
+      uses: actions/upload-artifact@v3
+      with:
+        name: documentation-site
+        path: site/
+        retention-days: 7
+
+  deploy-preview:
+    needs: test-docs
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Download documentation site artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: documentation-site
+        path: site
+    
+    - name: Deploy preview to Netlify
+      uses: nwtgck/actions-netlify@v1.2
+      with:
+        publish-dir: './site'
+        production-deploy: false
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        deploy-message: "Deploy preview for PR #${{ github.event.number }}"
+        enable-pull-request-comment: true
+        enable-commit-comment: false
+        overwrites-pull-request-comment: true
+      env:
+        NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+        NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+      timeout-minutes: 1 

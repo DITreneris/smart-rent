@@ -2,8 +2,8 @@ import os
 import secrets
 from typing import Any, Dict, List, Optional, Union
 
-from pydantic import AnyHttpUrl, EmailStr, field_validator, HttpUrl
-from pydantic_settings import BaseSettings
+from pydantic import AnyHttpUrl, EmailStr, validator, HttpUrl, BaseSettings
+# from pydantic_settings import BaseSettings # Commented out or removed
 
 
 class Settings(BaseSettings):
@@ -11,6 +11,11 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
     DEBUG: bool = True
     API_V1_PREFIX: str = "/api/v1"
+    API_BASE_URL: str = "http://localhost:8000" # Base URL for constructing links
+    
+    # Server settings
+    HOST: str = "0.0.0.0"
+    PORT: int = 8000
     
     # Security
     SECRET_KEY: str = secrets.token_urlsafe(32)
@@ -23,7 +28,7 @@ class Settings(BaseSettings):
     # CORS Configuration
     ALLOWED_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:8000"]
 
-    @field_validator("ALLOWED_ORIGINS", mode="before")
+    @validator("ALLOWED_ORIGINS", pre=True, always=True)
     def assemble_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:
         if isinstance(v, str):
             try:
@@ -45,7 +50,14 @@ class Settings(BaseSettings):
     # Web3 Configuration
     WEB3_PROVIDER_URL: str
     CONTRACT_ADDRESS: str
+    CONTRACT_ABI: Union[str, dict, list] # Can be JSON string in .env or loaded from file path
     CHAIN_ID: int = 11155111  # Sepolia Testnet
+    # Private key for the platform wallet sending transactions (MUST BE KEPT SECRET)
+    PLATFORM_PRIVATE_KEY: str
+    # Default gas limit if estimation fails
+    DEFAULT_GAS_LIMIT: int = 300000 # Adjust as needed
+    # Optional: Timeout for waiting for tx receipts (in seconds)
+    TX_WAIT_TIMEOUT: int = 120
     
     # Redis Configuration
     REDIS_HOST: str = "localhost"

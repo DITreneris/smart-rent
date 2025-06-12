@@ -28,7 +28,7 @@ def upgrade():
         sa.Column('is_active', sa.Boolean(), server_default='1'),
         sa.Column('is_verified', sa.Boolean(), server_default='0'),
         sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP')),
-        sa.Column('updated_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP')),
+        sa.Column('updated_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP')),
     )
     
     # Create indexes for common queries
